@@ -42,12 +42,20 @@ FILE_SIZE_MAX_VALUE_BYTES = 1 * 1024 * 1024
 FILE_BUCKET_MAX_LENGTH = 25
 FILE_KEY_MAX_LENGTH = 128
 
+OUTBOX_TOPIC_MAX_LENGTH = 512
+OUTBOX_MESSAGE_MAX_LENGTH = 2048
+
 FIELD_SUB = "sub"
 TOKEN_TYPE = "type"
 
 BEARER_TOKEN_TYPE = "Bearer"
 ACCESS_TOKEN_FIELD = "access"
 REFRESH_TOKEN_FIELD = "refresh"
+
+
+class EventStatus(StrEnum):
+    pending = "pending"
+    sent = "sent"
 
 
 class RenderStatus(StrEnum):
