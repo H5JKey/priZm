@@ -166,10 +166,10 @@ GLuint RenderEngine::compileShader(const std::string& source) {
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (!success) {
         GLint logLength;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+        glGetProgramiv(shader, GL_INFO_LOG_LENGTH, &logLength);
 
         std::vector<char> log(logLength);
-        glGetShaderInfoLog(shader, logLength, nullptr, log.data());
+        glGetProgramInfoLog(shader, logLength, nullptr, log.data());
 
         std::string errorLog(log.data(), logLength);
         glDeleteShader(shader);
