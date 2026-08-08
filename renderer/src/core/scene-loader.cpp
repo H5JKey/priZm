@@ -105,7 +105,7 @@ Scene::Material SceneLoader::loadMaterial(const fastgltf::Material& gltfMaterial
 
     glm::vec3 emissiveColor = glm::make_vec3(gltfMaterial.emissiveFactor.data());
     float emissiveStrength = gltfMaterial.emissiveStrength;
-    glm::vec4 emission = glm::vec4(emissiveColor * emissiveStrength, 1.0f);
+    material.emission = emissiveColor * emissiveStrength;
 
     material.albedoTextureID = -1;
     if (gltfMaterial.pbrData.baseColorTexture.has_value()) {
