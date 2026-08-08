@@ -6,6 +6,8 @@ void Config::apply(env::dotenv dotenv) {
         if (dotenv.hasVariable("KAFKA_GROUP_ID")) kafkaGroupID_ = dotenv["KAFKA_GROUP_ID"];
         if (dotenv.hasVariable("KAFKA_TOPIC_INPUT")) kafkaTopicInput_ = dotenv["KAFKA_TOPIC_INPUT"];
         if (dotenv.hasVariable("KAFKA_TOPIC_OUTPUT")) kafkaTopicOutput_ = dotenv["KAFKA_TOPIC_OUTPUT"];
+        if (dotenv.hasVariable("KAFKA_TOPIC_DLQ")) kafkaTopicDLQ_ = dotenv["KAFKA_TOPIC_DLQ"];
+        if (dotenv.hasVariable("MAX_RETRIES")) maxRetries_ = dotenv["MAX_RETRIES"];
         if (dotenv.hasVariable("S3_HOST")) s3Host_ = dotenv["S3_HOST"];
         if (dotenv.hasVariable("S3_ACCESS_KEY")) s3AccessKey_ = dotenv["S3_ACCESS_KEY"];
         if (dotenv.hasVariable("S3_SECRET_KEY")) s3SecretKey_ = dotenv["S3_SECRET_KEY"];
@@ -28,6 +30,8 @@ void Config::fromEnvironment() {
         if (char* ptr = std::getenv("KAFKA_GROUP_ID")) kafkaGroupID_ = env::Value(ptr);
         if (char* ptr = std::getenv("KAFKA_TOPIC_INPUT")) kafkaTopicInput_ = env::Value(ptr);
         if (char* ptr = std::getenv("KAFKA_TOPIC_OUTPUT")) kafkaTopicOutput_ = env::Value(ptr);
+        if (char* ptr = std::getenv("KAFKA_TOPIC_DLQ")) kafkaTopicDLQ_ = env::Value(ptr);
+        if (char* ptr = std::getenv("MAX_RETRIES")) maxRetries_ = env::Value(ptr);
         if (char* ptr = std::getenv("S3_HOST")) s3Host_ = env::Value(ptr);
         if (char* ptr = std::getenv("S3_ACCESS_KEY")) s3AccessKey_ = env::Value(ptr);
         if (char* ptr = std::getenv("S3_SECRET_KEY")) s3SecretKey_ = env::Value(ptr);
@@ -69,6 +73,16 @@ std::string Config::kafkaTopicOutput() const {
     }
     return kafkaTopicOutput_.value();
 }
+
+std::string Config::kafkaTopicDLQ() const {
+    if (!kafkaTopicDLQ_.has_value()) {
+        throw std::runtime_error("KAFKA_TOPIC_DLQ not configured");
+    }
+    return kafkaTopicDLQ_.value();
+}
+
+int Config::maxRetries() const { return maxRetries_; }
+
 std::string Config::s3Host() const {
     if (!s3Host_.has_value()) {
         throw std::runtime_error("S3_HOST not configured");

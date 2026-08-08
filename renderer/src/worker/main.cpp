@@ -52,22 +52,21 @@ int main() try {
     Logger::getInstance().log("Renderer worker started", Logger::Level::INFO);
 
     while (true) {
+        json inputJson;
+        int width, height, samples;
+        int project_id;
+        std::string bucket, key;
+        std::string modelName;
         try {
             Logger::getInstance().log(std::format("Listening for messages..."), Logger::Level::INFO);
             std::string message = consumer.consume();
             Logger::getInstance().log(std::format("Message processing started"), Logger::Level::INFO);
-            int width, height, samples;
-            int project_id;
-            std::string bucket, key;
-            std::string modelName;
-            int rendererId;
             try {
-                json inputJson = json::parse(message);
+                inputJson = json::parse(message);
                 width = inputJson["width"];
                 height = inputJson["height"];
                 samples = inputJson["samples"];
                 project_id = inputJson["project_id"];
-
                 bucket = inputJson["file"]["bucket"];
                 key = inputJson["file"]["key"];
                 // modelName = inputJson["file"]["name"];
@@ -121,6 +120,20 @@ int main() try {
                             consumer.lastMessage.value().get_offset(), consumer.lastMessage.value().get_partition(),
                             e.what()),
                 Logger::Level::ERROR);
+            int retries = 0;
+            if (inputJson.contains("retry_count")) {
+                retries = inputJson["retry_count"];
+            }
+            if (retries < config.maxRetries()) {
+                inputJson["retry_count"] = ++retries;
+                producer.produce(config.kafkaTopicInput(), inputJson.dump());
+            } else {
+                json deadLetter;
+                deadLetter["project_id"] = project_id;
+                deadLetter["reason"] = e.what();
+                producer.produce(config.kafkaTopicDLQ(), deadLetter.dump());
+            }
+            consumer.commit();
             continue;
         }
         Logger::getInstance().log(std::format("Current message processing finished successfully"), Logger::Level::INFO);
