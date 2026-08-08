@@ -144,7 +144,7 @@ Environment variables take precedence over values defined in the .env file and o
 | `KAFKA_GROUP_ID` |	Kafka consumer group ID |	Yes | `-` |
 | `KAFKA_TOPIC_INPUT`	| Kafka topic to consume messages | Yes | `-` |
 | `KAFKA_TOPIC_OUTPUT` | Kafka topic to produce messages |	Yes | `-` |
-| `KAFKA_TOPIC_DLQ` | Kafka topic for dead letter queue |	YES | `-` |
+| `KAFKA_TOPIC_DLQ` | Kafka topic for dead letter queue |	Yes | `-` |
 | `MAX_RETRIES` | Maximum retry attempts for failed messages |	No | `5` |
 | `S3_HOST` |	S3 storage endpoint | Yes | `-` |
 | `S3_ACCESS_KEY`	| S3 access key | Yes | `-` |
