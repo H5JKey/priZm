@@ -20,13 +20,19 @@ class FileBase(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
 
 
-class FileCreate(FileBase):
+class FileLocationCreate(BaseModel):
     """
-    Схема для создания файла.
+    Схема для создания расположения файла в хранилище.
     """
 
     bucket: BucketConstraint
     key: KeyConstraint
+
+
+class FileCreate(FileBase, FileLocationCreate):
+    """
+    Схема для создания файла.
+    """
 
 
 class FileResponse(FileBase):

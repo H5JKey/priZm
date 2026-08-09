@@ -7,7 +7,6 @@ from schemas.auth import LoginRequest
 from services.auth import AuthService
 from services.file_uploader import FileUploader
 from services.project import ProjectService
-from services.render import RenderService
 from services.user import UserService
 
 from dependencies.auth import (
@@ -20,7 +19,6 @@ from dependencies.services import (
     get_auth_service,
     get_input_file_uploader,
     get_project_service,
-    get_render_service,
     get_user_service,
 )
 
@@ -54,11 +52,6 @@ LoginRequestDep = Annotated[
     Depends(get_login_request),
 ]
 
-
-RenderServiceDep = Annotated[
-    RenderService,
-    Depends(get_render_service),
-]
 
 ProjectServiceDep = Annotated[
     ProjectService,

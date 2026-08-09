@@ -1,7 +1,6 @@
 from dependencies.annotations import (
     AuthUserByAccessTokenDep,
     ProjectServiceDep,
-    RenderServiceDep,
 )
 from fastapi import APIRouter, status
 from schemas.project import (
@@ -79,12 +78,10 @@ async def create_project(
     user_id: AuthUserByAccessTokenDep,
     create_project_data: ProjectWithRenderCreate,
     project_service: ProjectServiceDep,
-    render_service: RenderServiceDep,
 ) -> ProjectWithRenderResponse:
     return await project_service.create_project(
         user_id=user_id,
         create_project=create_project_data,
-        render_service=render_service,
     )
 
 

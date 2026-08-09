@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import BinaryIO
 
 from schemas.file import FileResponse
-from schemas.render import RenderCreate
 
 
 class AbstractFileUploader(ABC):
@@ -18,16 +17,4 @@ class AbstractFileUploader(ABC):
     ) -> FileResponse:
         """
         Метод для загрузки файла.
-        """
-
-
-class AbstractRenderService(ABC):
-    """
-    Интерфейс для рендера моделей.
-    """
-
-    @abstractmethod
-    async def send_render_model_event(self, create_render_data: RenderCreate) -> None:
-        """
-        Метод для создания моделей.
         """

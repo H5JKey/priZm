@@ -12,7 +12,6 @@ from infrastructure.minio.client import MinioClient
 from services.auth import AuthService
 from services.file_uploader import FileUploader
 from services.project import ProjectService
-from services.render import RenderService
 from services.user import UserService
 
 from dependencies.minio import get_minio_client
@@ -63,16 +62,6 @@ async def get_user_service(
 ) -> AsyncGenerator[UserService]:
     user_service = UserService(user_repository)
     yield user_service
-
-
-async def get_render_service(
-    producer: Annotated[
-        AIOKafkaProducer,
-        Depends(get_aiokafka_producer),
-    ],
-) -> AsyncGenerator[RenderService]:
-    render_service = RenderService(producer)
-    yield render_service
 
 
 async def get_project_service(

@@ -1,18 +1,18 @@
 from pydantic import BaseModel
 
-from schemas.constraints.file import BucketConstraint, KeyConstraint
-from schemas.file import FileCreate
+from schemas.constraints.event import MessageConstraint, TopicConstraint
+from schemas.file import FileLocationCreate
 from schemas.render import RenderCreate
 
 
-class GenerateRenderEvent(RenderCreate):
+class GenerateRenderEvent(BaseModel):
     """
     Схема для события генерация проекта.
     """
 
-    bucket: BucketConstraint
-    key: KeyConstraint
     project_id: int
+    render: RenderCreate
+    file: FileLocationCreate
 
 
 class AddRenderProjectEvent(BaseModel):
@@ -20,5 +20,20 @@ class AddRenderProjectEvent(BaseModel):
     Схема для события загрузка готового рендера в проект.
     """
 
-    file: FileCreate
     project_id: int
+    file: FileLocationCreate
+
+
+class EventBase(BaseModel):
+    """
+    Схема для работы с outbox.
+    """
+
+
+class EventCreate(BaseModel):
+    """
+    Схема для создания записи о событии в outbox.
+    """
+
+    topic: TopicConstraint
+    message: MessageConstraint
