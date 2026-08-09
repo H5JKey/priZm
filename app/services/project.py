@@ -1,20 +1,21 @@
 from types import TracebackType
 from typing import Self, cast
 
-from core.constants import ProjectVisibility
+from core.constants import KafkaTopic, ProjectVisibility
 from core.exceptions.auth import PermissionDeniedError
 from core.exceptions.file import FileIdNotFoundError
 from core.exceptions.project import ProjectIdNotFoundError
 from core.exceptions.user import UserIdNotFoundError
 from core.interfaces.clients import AbstractUnitOfWorkClient
-from core.interfaces.services import AbstractRenderService
 from core.logging import get_logger
 from infrastructure.database.models import User
 from infrastructure.database.repositories.file import FileRepository
+from infrastructure.database.repositories.outbox import OutboxRepository
 from infrastructure.database.repositories.project import ProjectRepository
 from infrastructure.database.repositories.render import RenderRepository
 from infrastructure.database.repositories.user import UserRepository
-from schemas.event import AddRenderProjectEvent, GenerateRenderEvent
+from schemas.event import AddRenderProjectEvent, EventCreate, GenerateRenderEvent
+from schemas.file import FileLocationCreate
 from schemas.project import (
     ProjectPartialUpdate,
     ProjectResponse,
@@ -38,6 +39,7 @@ class ProjectService:
         self.project_repository = self.unit_of_work.get_repository(ProjectRepository)
         self.render_repository = self.unit_of_work.get_repository(RenderRepository)
         self.file_repository = self.unit_of_work.get_repository(FileRepository)
+        self.outbox_repository = self.unit_of_work.get_repository(OutboxRepository)
 
     async def __aenter__(self) -> "Self":
         return self
@@ -176,7 +178,6 @@ class ProjectService:
         self,
         user_id: int,
         create_project: ProjectWithRenderCreate,
-        render_service: AbstractRenderService,
     ) -> ProjectWithRenderResponse:
         create_project_data = create_project.project
         create_render_data = create_project.render
@@ -196,13 +197,22 @@ class ProjectService:
             render=render_response,
             **project_response.model_dump(),
         )
-        render_model_event_data = GenerateRenderEvent(
+        file_location_create = FileLocationCreate(
             bucket=file.bucket,
             key=file.key,
-            project_id=project_response.id,
-            **create_render_data.model_dump(),
         )
-        await render_service.send_render_model_event(render_model_event_data)
+        message = GenerateRenderEvent(
+            project_id=project.id,
+            render=create_render_data,
+            file=file_location_create,
+        )
+        json_string_message = message.model_dump_json()
+        event_create_data = EventCreate(
+            topic=KafkaTopic.create_project,
+            message=json_string_message,
+        )
+
+        await self.outbox_repository.create_event(event_create_data)
         logger.info(
             "Created project, project_id=%s, user_id=%s, render_id=%s, source_file_id=%s, name=%s, status=%s, visibility=%s",  # noqa: E501
             project.id,

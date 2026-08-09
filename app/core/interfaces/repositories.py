@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 
-from infrastructure.database.models import File, Project, Render, User
+from infrastructure.database.models import File, Outbox, Project, Render, User
 from pydantic import EmailStr
+from schemas.event import EventCreate
 from schemas.file import FileCreate
 from schemas.project import ProjectCreate, ProjectPartialUpdate
 from schemas.render import RenderCreate
@@ -165,4 +166,28 @@ class AbstractProjectRepository(AbstractRepository):
     async def delete_by_id(self, project_id: int) -> None:
         """
         Удалить проект по id.
+        """
+
+
+class AbstractOutboxRepository(AbstractRepository):
+    """
+    Класс для работы с outbox таблицей.
+    """
+
+    @abstractmethod
+    async def get_by_id(self, event_id: int) -> Outbox | None:
+        """
+        Метод для получения информации о событии по его id.
+        """
+
+    @abstractmethod
+    async def create_event(self, event_create_data: EventCreate) -> Outbox:
+        """
+        Метод для создания записи о событии.
+        """
+
+    @abstractmethod
+    async def send_event(self, event_id: int) -> Outbox:
+        """
+        Метод для изменения статуса события на отправленный.
         """
