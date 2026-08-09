@@ -1,17 +1,22 @@
 from typing import cast
 
 from core.exceptions.user import UserIdNotFoundError
-from core.interfaces.repositories import AbstractUserRepository
+from core.interfaces.clients import AbstractUnitOfWorkClient
 from core.logging import get_logger
 from infrastructure.database.models import User
+from infrastructure.database.repositories.user import UserRepository
 from schemas.user import UserResponse, UserUpdate
 
 logger = get_logger(__name__)
 
 
 class UserService:
-    def __init__(self, user_repository: AbstractUserRepository) -> None:
-        self.user_repository = user_repository
+    def __init__(
+        self,
+        unit_of_work: AbstractUnitOfWorkClient,
+    ) -> None:
+        self.unit_of_work = unit_of_work
+        self.user_repository = self.unit_of_work.get_repository(UserRepository)
 
     async def get_by_id(self, user_id: int) -> UserResponse:
         user = await self.user_repository.get_by_id(user_id)

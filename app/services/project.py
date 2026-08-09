@@ -6,7 +6,7 @@ from core.exceptions.auth import PermissionDeniedError
 from core.exceptions.file import FileIdNotFoundError
 from core.exceptions.project import ProjectIdNotFoundError
 from core.exceptions.user import UserIdNotFoundError
-from core.interfaces.clients import AbstractUnitOfWorkClient
+from core.interfaces.clients import AbstractS3Client, AbstractUnitOfWorkClient
 from core.logging import get_logger
 from infrastructure.database.models import User
 from infrastructure.database.repositories.file import FileRepository
@@ -15,7 +15,7 @@ from infrastructure.database.repositories.project import ProjectRepository
 from infrastructure.database.repositories.render import RenderRepository
 from infrastructure.database.repositories.user import UserRepository
 from schemas.event import AddRenderProjectEvent, EventCreate, GenerateRenderEvent
-from schemas.file import FileLocationCreate
+from schemas.file import FileCreate, FileLocationCreate
 from schemas.project import (
     ProjectPartialUpdate,
     ProjectResponse,
@@ -133,11 +133,23 @@ class ProjectService:
     async def add_render_to_project(
         self,
         add_render_project_event: AddRenderProjectEvent,
+        s3_client: AbstractS3Client,
     ) -> None:
-        file = add_render_project_event.file
         project_id = add_render_project_event.project_id
-        render_file = await self.file_repository.create_file(file)
+        file_location = add_render_project_event.file
+        bucket = file_location.bucket
+        key = file_location.key
+
         project = await self.project_repository.get_by_id(project_id)
+        name = f"{project.name}.png"
+        size = await s3_client.get_file_size(bucket, key)
+        file = FileCreate(
+            name=name,
+            size=size,
+            bucket=bucket,
+            key=key,
+        )
+        render_file = await self.file_repository.create_file(file)
         await self.render_repository.add_render_file(
             render_id=project.render.id,
             file_id=render_file.id,
