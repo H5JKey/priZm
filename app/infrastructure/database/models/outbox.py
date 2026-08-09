@@ -1,7 +1,8 @@
 from datetime import datetime
 
+from sqlalchemy.dialects.postgresql import JSONB
+
 from core.constants import (
-    OUTBOX_MESSAGE_MAX_LENGTH,
     OUTBOX_TOPIC_MAX_LENGTH,
     EventStatus,
 )
@@ -15,7 +16,7 @@ class Outbox(Base):
     __tablename__ = "outbox"
 
     topic: Mapped[str] = mapped_column(String(OUTBOX_TOPIC_MAX_LENGTH))
-    message: Mapped[str] = mapped_column(String(OUTBOX_MESSAGE_MAX_LENGTH))
+    message: Mapped[dict] = mapped_column(JSONB)
     event_date: Mapped[datetime] = mapped_column(
         server_default=func.timezone("UTC", func.now()),
     )

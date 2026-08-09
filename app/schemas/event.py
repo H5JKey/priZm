@@ -1,8 +1,23 @@
 from pydantic import BaseModel
 
-from schemas.constraints.event import MessageConstraint, TopicConstraint
+from schemas.constraints.event import TopicConstraint
 from schemas.file import FileLocationCreate
 from schemas.render import RenderCreate
+
+
+class EventBase(BaseModel):
+    """
+    Схема для работы с outbox.
+    """
+
+
+class EventCreate(BaseModel):
+    """
+    Схема для создания записи о событии в outbox.
+    """
+
+    topic: TopicConstraint
+    message: dict
 
 
 class GenerateRenderEvent(BaseModel):
@@ -22,18 +37,3 @@ class AddRenderProjectEvent(BaseModel):
 
     project_id: int
     file: FileLocationCreate
-
-
-class EventBase(BaseModel):
-    """
-    Схема для работы с outbox.
-    """
-
-
-class EventCreate(BaseModel):
-    """
-    Схема для создания записи о событии в outbox.
-    """
-
-    topic: TopicConstraint
-    message: MessageConstraint

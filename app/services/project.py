@@ -218,10 +218,9 @@ class ProjectService:
             render=create_render_data,
             file=file_location_create,
         )
-        json_string_message = message.model_dump_json()
         event_create_data = EventCreate(
             topic=KafkaTopic.create_project,
-            message=json_string_message,
+            message=message.model_dump(),
         )
 
         await self.outbox_repository.create_event(event_create_data)
