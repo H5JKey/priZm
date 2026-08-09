@@ -11,6 +11,12 @@ class AbstractS3Client(ABC):
     """
 
     @abstractmethod
+    async def get_file_size(self, bucket: str, key: str) -> int:
+        """
+        Получить размер файла в байтах.
+        """
+
+    @abstractmethod
     async def get_object(self, bucket: str, key: str) -> BinaryIO:
         """
         Метод для получения файла из s3 хранилища.

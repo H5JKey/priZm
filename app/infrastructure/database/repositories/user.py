@@ -35,8 +35,7 @@ class UserRepository(AbstractUserRepository):
     async def create_user(self, create_user_data: UserCreate) -> User:
         user = User(**create_user_data.model_dump())
         self.session.add(user)
-        await self.session.commit()
-        await self.session.refresh(user)
+        await self.session.flush()
         logger.debug(
             "Created user, transaction_id=%s, user_id=%s, username=%s",
             id(self.session),
@@ -55,8 +54,7 @@ class UserRepository(AbstractUserRepository):
             setattr(user, field, value)
 
         self.session.add(user)
-        await self.session.commit()
-        await self.session.refresh(user)
+        await self.session.flush()
         logger.debug(
             "Updated user, transaction_id=%s, user_id=%s, username=%s",
             id(self.session),
@@ -68,7 +66,7 @@ class UserRepository(AbstractUserRepository):
     async def delete_by_id(self, user_id: int) -> None:
         stmt = delete(User).where(User.id == user_id)
         await self.session.execute(stmt)
-        await self.session.commit()
+        await self.session.flush()
         logger.debug(
             "Deleted user, transaction_id=%s, user_id=%s",
             id(self.session),

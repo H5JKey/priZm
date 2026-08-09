@@ -6,13 +6,14 @@ from core.exceptions.user import (
     UserUsernameAlreadyExistsError,
     UserUsernameNotFoundError,
 )
-from core.interfaces.repositories import AbstractUserRepository
+from core.interfaces.clients import AbstractUnitOfWorkClient
 from core.logging import get_logger
 from core.security.jwt_tokens.factory import create_access_token, create_token
 from core.security.password_utils import (
     convert_register_to_create_user,
     validate_password,
 )
+from infrastructure.database.repositories.user import UserRepository
 from schemas.auth import LoginRequest, RegisterRequest
 from schemas.token import TokenInfo
 from schemas.user import UserResponse
@@ -23,9 +24,10 @@ logger = get_logger(__name__)
 class AuthService:
     def __init__(
         self,
-        user_repository: AbstractUserRepository,
+        unit_of_work: AbstractUnitOfWorkClient,
     ) -> None:
-        self.user_repository = user_repository
+        self.unit_of_work = unit_of_work
+        self.user_repository = self.unit_of_work.get_repository(UserRepository)
 
     async def register(self, register_user_data: RegisterRequest) -> TokenInfo:
         user = await self.user_repository.get_by_username(register_user_data.username)

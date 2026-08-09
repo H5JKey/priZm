@@ -1,6 +1,7 @@
 from json import dumps, loads
 
-from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer, ConsumerRecord
+from core.config.application import settings
 from core.constants import kafka_topic
 from core.logging import get_logger
 from pydantic import BaseModel
@@ -9,6 +10,8 @@ from services.project import ProjectService
 
 from infrastructure.database.core import session_factory
 from infrastructure.database.unit_of_work import UnitOfWork
+from infrastructure.minio.client import MinioClient
+from infrastructure.minio.session import get_minio_session
 
 logger = get_logger(__name__)
 
@@ -26,29 +29,39 @@ def deserialize_message(message: bytes) -> dict[str, str | int | bool]:
     return json_message  # type: ignore[no-any-return]
 
 
+async def process_message(message: ConsumerRecord) -> None:
+    json_data = message.value
+    add_render_project_event = AddRenderProjectEvent.model_validate(
+        json_data,
+    )
+    logger.info("Received message, %s", add_render_project_event)
+    project_id = add_render_project_event.project_id
+    minio_session = get_minio_session()
+    async with (
+        session_factory() as session,
+        UnitOfWork(session) as unit_of_work,
+        ProjectService(unit_of_work) as project_service,
+        minio_session.create_client(
+            "s3",
+            **settings.minio.config,
+        ) as client,
+        MinioClient(client) as s3_client,
+    ):
+        await project_service.update_project_status(project_id)
+        await project_service.add_render_to_project(
+            add_render_project_event,
+            s3_client,
+        )
+
+
 async def add_render_to_project_consume(consumer: AIOKafkaConsumer) -> None:
     await consumer.start()
     async for message in consumer:
-        json_data = message.value
-        add_render_project_event = AddRenderProjectEvent.model_validate(
-            json_data,
-        )
-        logger.info("Received message, %s", add_render_project_event)
-        project_id = add_render_project_event.project_id
-        async with (
-            session_factory() as session,
-            UnitOfWork(session) as unit_of_work,
-            ProjectService(unit_of_work) as project_service,
-        ):
-            await project_service.update_project_status(project_id)
-            await project_service.add_render_to_project(
-                add_render_project_event,
-            )
-
+        await process_message(message)
         await consumer.commit()
 
 
-add_render_to_project_consumer = AIOKafkaConsumer(
+consumer = AIOKafkaConsumer(
     kafka_topic.generate_model,
     bootstrap_servers="kafka:9092",
     group_id="app",
@@ -56,7 +69,7 @@ add_render_to_project_consumer = AIOKafkaConsumer(
 )
 
 
-generate_render_producer = AIOKafkaProducer(
+producer = AIOKafkaProducer(
     bootstrap_servers="kafka:9092",
     value_serializer=serialize_message,
 )

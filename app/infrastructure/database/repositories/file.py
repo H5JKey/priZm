@@ -23,8 +23,7 @@ class FileRepository(AbstractFileRepository):
             **create_file_data.model_dump(),
         )
         self.session.add(file)
-        await self.session.commit()
-        await self.session.refresh(file)
+        await self.session.flush()
         logger.debug(
             "Created file, transaction_id=%s, file_id=%s, bucket=%s, key=%s, name=%s, size=%s",  # noqa: E501
             id(self.session),
@@ -39,7 +38,7 @@ class FileRepository(AbstractFileRepository):
     async def delete_by_id(self, file_id: int) -> None:
         stmt = delete(File).where(File.id == file_id)
         await self.session.execute(stmt)
-        await self.session.commit()
+        await self.session.flush()
         logger.debug(
             "Deleted file, transaction_id=%s, file_id=%s",
             id(self.session),

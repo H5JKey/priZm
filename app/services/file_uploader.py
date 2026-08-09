@@ -3,10 +3,10 @@ from os import fstat
 from typing import BinaryIO
 from uuid import uuid4
 
-from core.interfaces.clients import AbstractS3Client
-from core.interfaces.repositories import AbstractFileRepository
+from core.interfaces.clients import AbstractS3Client, AbstractUnitOfWorkClient
 from core.interfaces.services import AbstractFileUploader
 from core.logging import get_logger
+from infrastructure.database.repositories.file import FileRepository
 from schemas.file import FileCreate, FileResponse
 
 logger = get_logger(__name__)
@@ -17,10 +17,11 @@ class FileUploader(AbstractFileUploader):
         self,
         bucket: str,
         s3_client: AbstractS3Client,
-        file_repository: AbstractFileRepository,
+        unit_of_work: AbstractUnitOfWorkClient,
     ) -> None:
         self.s3_client = s3_client
-        self.file_repository = file_repository
+        self.unit_of_work = unit_of_work
+        self.file_repository = self.unit_of_work.get_repository(FileRepository)
         self.bucket = bucket
 
     @staticmethod
