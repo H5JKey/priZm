@@ -8,7 +8,7 @@
 
 <table>
   <tr>
-    <td><img src="images/fox.png" alt="Glass fox" width="400"></td>
+    <td><img src="images/cornell.png" alt="Cornell box" width="400"></td>
     <td><img src="images/barry.png" alt="Barry" width="400"></td>
   </tr>
   <tr>
@@ -101,6 +101,7 @@ docker run --rm renderer renderer_cli <width> <height> <samples> <input_scene> [
 | `-d, --debug` | `-` | Save debug images (raw, albedo, normals) |
 | `-p, --plane` | `float` | Add ground plane at scene center with specified size |
 | `-c, --camera` | `vec3 vec3 float` | Set camera: `position lookAt fov` |
+| `-B, --background` | `vec3` | Set background color (default: vec3(0,0,0)) |
 
 ---
 

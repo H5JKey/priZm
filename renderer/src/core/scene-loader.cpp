@@ -96,6 +96,10 @@ Scene::Material SceneLoader::loadMaterial(const fastgltf::Material& gltfMaterial
         material.attenuationColor = glm::make_vec4(gltfMaterial.volume->attenuationColor.data());
         material.attenuationDistance = gltfMaterial.volume->attenuationDistance;
         material.thicknessFactor = gltfMaterial.volume->thicknessFactor;
+    } else {
+        material.attenuationColor = glm::vec3(1.0);
+        material.attenuationDistance = 0.01;
+        material.thicknessFactor = 0.01;
     }
 
     material.transmission = 0.0f;
@@ -157,7 +161,6 @@ Scene::Camera SceneLoader::loadCamera(const fastgltf::Camera::Perspective& gltfC
     direction = glm::normalize(direction);
 
     camera.lookAt = glm::vec4(glm::vec3(camera.origin) + direction, 1.0);
-
     return camera;
 }
 

@@ -54,7 +54,7 @@ void RenderEngine::destroy() {
     }
 }
 
-RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilder(-1, 32) {
+RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilder(-1, 4) {
     try {
         Logger::getInstance().log("Compiling path tracing shader", Logger::Level::DEBUG);
         pathTracingProgram = compileShader(utils::readFromFile("shaders/path-tracing.glsl"));
@@ -206,7 +206,6 @@ void RenderEngine::pathTracing(RenderTarget& target, const GPUData& gpuData, con
 
     int groupsX = (target.getWidth() + 15) / 16;
     int groupsY = (target.getHeight() + 15) / 16;
-
     auto start = std::chrono::steady_clock::now();
     for (int i = 1; i <= samples; i++) {
         if (i % 5 == 0 || i == samples) {

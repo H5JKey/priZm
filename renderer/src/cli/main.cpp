@@ -27,6 +27,7 @@ void printHelp(std::string_view programName) {
     std::println(" -d, --debug     Output debug images: raw, albedo, normals");
     std::println(" -p, --plane     Add plane to scene");
     std::println(" -c, --camera    Set camera properties");
+    std::println(" -B, --background    Set background color (default: vec3(0,0,0))");
 }
 
 void printUsage(std::string_view programName) {
@@ -52,6 +53,7 @@ int main(int argc, char* argv[]) {
     std::string output = "output.png";
     bool debugImages = false;
     bool plane = true;
+    glm::vec3 backgroundColor;
     try {
         width = std::stoi(argv[1]);
         height = std::stoi(argv[2]);
@@ -109,6 +111,19 @@ int main(int argc, char* argv[]) {
                 std::println(std::cerr, "Error: {} requires 7 numbers <origin:vec3> <lookAt:vec3> <fov:float>", arg);
                 return EXIT_FAILURE;
             }
+        } else if (arg == "-B" || arg == "--background") {
+            if (i + 3 >= argc) {
+                std::println(std::cerr, "Error: {} requires 3 numbers <color:vec3>", arg);
+                return EXIT_FAILURE;
+            }
+            try {
+                backgroundColor.r = std::stof(argv[++i]);
+                backgroundColor.g = std::stof(argv[++i]);
+                backgroundColor.b = std::stof(argv[++i]);
+            } catch (const std::exception& e) {
+                std::println(std::cerr, "Error: {} requires 3 numbers <color:vec3>", arg);
+                return EXIT_FAILURE;
+            }
         } else {
             std::println(std::cerr, "Unrecognized option: {}", argv[i]);
             std::println(std::cerr, "Try {} --help for more information", argv[0]);
@@ -129,6 +144,7 @@ int main(int argc, char* argv[]) {
         RenderEngine engine;
         SceneLoader loader;
         Scene scene = loader.loadGltfFromFile(input);
+        scene.setBackground(backgroundColor);
         if (showPlane) loader.addPlane(scene, planeSize);
         if (cameraSet) scene.setCamera(userCamera);
         std::shared_ptr<RenderTarget> egl = TargetManager::getInstance().createEGLTarget(width, height);
