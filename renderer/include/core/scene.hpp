@@ -81,4 +81,5 @@ class Scene {
     const std::vector<Material>& getMaterials() const noexcept;
     const std::vector<TextureData>& getTexturesData() const noexcept;
     void setCamera(const Camera& camera);
+    void setBackground(const glm::vec3 backgroundColor);
 };

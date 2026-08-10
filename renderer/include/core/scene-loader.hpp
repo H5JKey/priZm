@@ -9,7 +9,8 @@
 class SceneLoader {
     static constexpr auto supportedExtensions =
         fastgltf::Extensions::KHR_mesh_quantization | fastgltf::Extensions::KHR_texture_transform |
-        fastgltf::Extensions::KHR_materials_variants | fastgltf::Extensions::KHR_materials_transmission;
+        fastgltf::Extensions::KHR_materials_variants | fastgltf::Extensions::KHR_materials_transmission |
+        fastgltf::Extensions::KHR_materials_emissive_strength;
     static constexpr auto gltfOptions = fastgltf::Options::DontRequireValidAssetMember |
                                         fastgltf::Options::AllowDouble | fastgltf::Options::LoadExternalBuffers |
                                         fastgltf::Options::LoadExternalImages | fastgltf::Options::GenerateMeshIndices |

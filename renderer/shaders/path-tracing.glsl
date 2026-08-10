@@ -222,7 +222,7 @@ HitInfo castRayThroughBVH(vec3 origin, vec3 direction) {
     closestHitInfo.normal = vec3(0);
     closestHitInfo.material_id = -1;
 
-    int stack[64];
+    int stack[1024];
     int stackPtr = 0;
 
     stack[stackPtr++] = 0;
@@ -314,7 +314,7 @@ vec3 traceRay(vec3 origin, vec3 direction, uint seed) {
         else
             hit.distance = MAX_DIST;
         if (hit.distance > MAX_DIST - 1) {
-            return throughput * (uBackgroundColor + vec3(100.0, 90.0, 70.0) * pow(max(0.0, dot(direction, normalize(vec3(-1,1,1)))), 256.0));
+            return throughput * (uBackgroundColor + vec3(0.0, 0.0, 0.0) * pow(max(0.0, dot(direction, normalize(vec3(-1,1,1)))), 256.0));
         }
         Material material = materials[hit.material_id];
         if (length(material.emission.rgb) > 0.01) {
@@ -397,8 +397,8 @@ vec3 traceRay(vec3 origin, vec3 direction, uint seed) {
                         direction = T;
                         origin = hit.position - N * 0.001;
                         if (!frontFace) {
-                            vec3 attenuation = exp(-material.attenuationColor.rgb * material.attenuationDistance * material.thicknessFactor * pathDistance);
-                            throughput *= attenuation / (1 - F.x);
+                            vec3 sigma = -log(material.attenuationColor.rgb) / material.attenuationDistance;
+                            throughput *= exp(-sigma * pathDistance) / (1 - F.x);
                             insideTransparent = false;
                             pathDistance = 0.0;
                         }
