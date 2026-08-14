@@ -187,7 +187,13 @@ class AbstractOutboxRepository(AbstractRepository):
         """
 
     @abstractmethod
-    async def send_event(self, event_id: int) -> Outbox:
+    async def mark_event_as_sent(self, event_id: int) -> Outbox:
         """
         Метод для изменения статуса события на отправленный.
+        """
+
+    @abstractmethod
+    async def get_pending_event(self) -> Outbox | None:
+        """
+        Метод для получения событий со статусом pending.
         """

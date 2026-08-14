@@ -21,14 +21,17 @@ class MinioClient(AbstractS3Client):
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
-    ) -> None: ...
+    ) -> None:
+        """
+        Действия при выходе из контекстного менеджера.
+        """
 
     async def get_file_size(self, bucket: str, key: str) -> int:
         response = await self.head_object(
             bucket=bucket,
             key=key,
         )
-        return response["ContentLength"]
+        return cast(int, response["ContentLength"])
 
     async def generate_presigned_url(
         self,
@@ -40,6 +43,7 @@ class MinioClient(AbstractS3Client):
         params = {
             "Bucket": bucket,
             "Key": key,
+            "ResponseContentType": "image/png",
         }
         presigned_url = await self.minio_client.generate_presigned_url(
             ClientMethod=client_method,
@@ -48,8 +52,8 @@ class MinioClient(AbstractS3Client):
         )
         return cast(str, presigned_url)
 
-    async def head_object(self, bucket: str, key: str) -> dict:
-        return await self.minio_client.head_object(Bucket=bucket, Key=key)
+    async def head_object(self, bucket: str, key: str) -> dict:  # type: ignore[type-arg]
+        return await self.minio_client.head_object(Bucket=bucket, Key=key)  # type: ignore[no-any-return]
 
     async def get_object(self, bucket: str, key: str) -> BinaryIO:
         file_response = await self.minio_client.get_object(
