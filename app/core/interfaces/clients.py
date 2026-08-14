@@ -17,6 +17,18 @@ class AbstractS3Client(ABC):
         """
 
     @abstractmethod
+    async def generate_presigned_url(
+        self,
+        bucket: str,
+        key: str,
+        client_method: str,
+        expires_in: int,
+    ) -> str:
+        """
+        Получить ссылку для временного доступа.
+        """
+
+    @abstractmethod
     async def get_object(self, bucket: str, key: str) -> BinaryIO:
         """
         Метод для получения файла из s3 хранилища.

@@ -17,7 +17,7 @@ class EventCreate(BaseModel):
     """
 
     topic: TopicConstraint
-    message: dict
+    message: dict  # type: ignore[type-arg]
 
 
 class GenerateRenderEvent(BaseModel):
