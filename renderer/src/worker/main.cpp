@@ -69,7 +69,6 @@ int main() try {
                 project_id = inputJson["project_id"];
                 bucket = inputJson["file"]["bucket"];
                 key = inputJson["file"]["key"];
-                // modelName = inputJson["file"]["name"];
             } catch (const std::exception& e) {
                 Logger::getInstance().log(
                     std::format("Failed to parse json from string: {}. Error: {}", message, e.what()),
@@ -102,9 +101,7 @@ int main() try {
                 outputJson["project_id"] = project_id;
                 outputJson["file"] = {
                     {"bucket", config.s3BucketOutput()},
-                    {"name", "67"},
                     {"key", outputKey},
-                    {"size", 67},
                 };
             } catch (const std::exception& e) {
                 Logger::getInstance().log(std::format("Failed to generate output json: {}", e.what()),
