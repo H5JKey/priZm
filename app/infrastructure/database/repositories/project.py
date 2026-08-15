@@ -20,6 +20,7 @@ class ProjectRepository(AbstractProjectRepository):
             select(Project)
             .options(
                 joinedload(Project.render).joinedload(Render.file),
+                joinedload(Project.source_file),
             )
             .where(Project.id == project_id)
         )

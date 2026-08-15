@@ -4,7 +4,12 @@ from core.constants import ProjectVisibility, RenderStatus
 from pydantic import BaseModel, ConfigDict
 
 from schemas.constraints.project import DescriptionConstraint, NameConstraint
-from schemas.render import RenderCreate, RenderResponse, RenderWithFileResponse
+from schemas.render import (
+    RenderCreate,
+    RenderResponse,
+    RenderWithFileFullResponse,
+    RenderWithFileResponse,
+)
 
 
 class ProjectBase(BaseModel):
@@ -45,15 +50,6 @@ class ProjectPartialUpdate(BaseModel):
     visibility: ProjectVisibility | None = None
 
 
-class ProjectUpdateStatus(BaseModel):
-    """
-    Схема для обновления данных о проекте при готовом рендере.
-    """
-
-    status: RenderStatus
-    render_id: int
-
-
 class ProjectResponse(ProjectBase):
     """
     Схема для вывода информации о проекте.
@@ -63,6 +59,22 @@ class ProjectResponse(ProjectBase):
     status: RenderStatus
     render_id: int | None
     id: int
+
+
+class ProjectFullResponse(ProjectResponse):
+    """
+    Схема для вывода информации о проекте вместе с ссылкой доступа к исходному файлу.
+    """
+
+    url: str
+
+
+class ProjectWithRenderFileFullResponse(ProjectFullResponse):
+    """
+    Схема для вывода информации о проекте с рендером.
+    """
+
+    render: RenderWithFileFullResponse
 
 
 class ProjectWithRenderResponse(ProjectResponse):

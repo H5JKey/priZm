@@ -21,10 +21,11 @@ from schemas.project import (
     ProjectResponse,
     ProjectResponseList,
     ProjectWithRenderCreate,
+    ProjectWithRenderFileFullResponse,
     ProjectWithRenderFileResponse,
     ProjectWithRenderResponse,
 )
-from schemas.render import RenderResponse
+from schemas.render import RenderResponse, RenderWithFileFullResponse
 
 logger = get_logger(__name__)
 
@@ -58,7 +59,8 @@ class ProjectService:
         self,
         project_id: int,
         user_id: int,
-    ) -> ProjectWithRenderFileResponse:
+        s3_client: AbstractS3Client,
+    ) -> ProjectWithRenderFileFullResponse:
         project = await self.project_repository.get_by_id(project_id)
         if project is None:
             raise ProjectIdNotFoundError(project_id)
@@ -84,7 +86,29 @@ class ProjectService:
             project.status,
             project.visibility,
         )
-        return ProjectWithRenderFileResponse.model_validate(project)
+        project_response = ProjectResponse.model_validate(project)
+        source_file_url = await s3_client.generate_presigned_url(
+            bucket=project.source_file.bucket,
+            key=project.source_file.key,
+            expires_in=10 * 60,
+            client_method="get_object",
+        )
+
+        render = RenderWithFileFullResponse.model_validate(project.render)
+        if project.render.file is not None:
+            render_file_url = await s3_client.generate_presigned_url(
+                bucket=project.render.file.bucket,
+                key=project.render.file.key,
+                expires_in=10 * 60,
+                client_method="get_object",
+            )
+            render.url = render_file_url.replace("minio", "localhost")
+
+        return ProjectWithRenderFileFullResponse(
+            **project_response.model_dump(),
+            render=render,
+            url=source_file_url.replace("minio", "localhost"),
+        )
 
     async def get_user_projects(
         self,
