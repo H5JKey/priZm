@@ -63,9 +63,9 @@ int main() try {
             Logger::getInstance().log(std::format("Message processing started"), Logger::Level::INFO);
             try {
                 inputJson = json::parse(message);
-                width = inputJson["width"];
-                height = inputJson["height"];
-                samples = inputJson["samples"];
+                width = inputJson["render"]["width"];
+                height = inputJson["render"]["height"];
+                samples = inputJson["render"]["samples"];
                 project_id = inputJson["project_id"];
                 bucket = inputJson["file"]["bucket"];
                 key = inputJson["file"]["key"];
