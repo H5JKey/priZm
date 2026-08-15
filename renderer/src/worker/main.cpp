@@ -79,6 +79,7 @@ int main() try {
             data = s3client.getData(bucket, key);
 
             Scene scene = sceneLoader.loadGltfFromMemory(data);
+            scene.setBackground(glm::vec3(0.53, 0.81, 0.92));
             std::vector<uint8_t> output;
             if (config.preview())
                 output = std::move(renderPipeline(engine, scene, 200, 200 * (static_cast<float>(height) / width), 5));
