@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from infrastructure.database.repositories.render import RenderRepository
 from infrastructure.database.unit_of_work import UnitOfWork
+from infrastructure.minio.client import MinioClient
 from schemas.auth import LoginRequest
 from services.auth import AuthService
 from services.file_uploader import FileUploader
@@ -14,6 +15,7 @@ from dependencies.auth import (
     get_auth_user_by_refresh_token,
     get_login_request,
 )
+from dependencies.minio import get_minio_client
 from dependencies.repositories import get_render_repository, get_unit_of_work
 from dependencies.services import (
     get_auth_service,
@@ -66,4 +68,9 @@ RenderRepositoryDep = Annotated[
 UnitOfWorkDep = Annotated[
     UnitOfWork,
     Depends(get_unit_of_work),
+]
+
+MinioClientDep = Annotated[
+    MinioClient,
+    Depends(get_minio_client),
 ]

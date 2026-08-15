@@ -1,5 +1,6 @@
 from dependencies.annotations import (
     AuthUserByAccessTokenDep,
+    MinioClientDep,
     ProjectServiceDep,
 )
 from fastapi import APIRouter, status
@@ -7,6 +8,7 @@ from schemas.project import (
     ProjectPartialUpdate,
     ProjectResponseList,
     ProjectWithRenderCreate,
+    ProjectWithRenderFileFullResponse,
     ProjectWithRenderFileResponse,
     ProjectWithRenderResponse,
 )
@@ -19,17 +21,19 @@ router = APIRouter(
 
 @router.get(
     "/{project_id}",
-    response_model=ProjectWithRenderFileResponse,
+    response_model=ProjectWithRenderFileFullResponse,
     status_code=status.HTTP_200_OK,
 )
 async def get_project(
     project_id: int,
     user_id: AuthUserByAccessTokenDep,
     project_service: ProjectServiceDep,
-) -> ProjectWithRenderFileResponse:
+    s3_client: MinioClientDep,
+) -> ProjectWithRenderFileFullResponse:
     return await project_service.get_by_id(
         project_id=project_id,
         user_id=user_id,
+        s3_client=s3_client,
     )
 
 
