@@ -135,8 +135,6 @@ RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilde
     }
 }
 
-void RenderEngine::createBuffers() {}
-
 GLuint RenderEngine::compileShader(const std::string& source) {
     GLuint shader = glCreateShader(GL_COMPUTE_SHADER);
     const char* src = source.c_str();
@@ -181,8 +179,8 @@ GLuint RenderEngine::compileShader(const std::string& source) {
     return program;
 }
 
-void RenderEngine::pathTracing(RenderTarget& target, const GPUData& gpuData, const Scene::Camera& camera,
-                               const glm::vec3 backgroundColor, int samples) {
+void RenderEngine::pathTracing(RenderTarget& target, const Scene::Camera& camera, const glm::vec3 backgroundColor,
+                               int samples) {
     Logger::getInstance().log("Path tracing started", Logger::Level::INFO);
 
     glUseProgram(pathTracingProgram);
@@ -212,7 +210,7 @@ void RenderEngine::pathTracing(RenderTarget& target, const GPUData& gpuData, con
             Logger::getInstance().log(std::format("Path tracing progress: {}/{}", i, samples), Logger::Level::INFO);
         }
         glUniform1ui(glGetUniformLocation(pathTracingProgram, "uSeed"), uniformDistr(gen));
-        glUniform1ui(glGetUniformLocation(pathTracingProgram, "uFrameIndex"), i);
+        glUniform1ui(glGetUniformLocation(pathTracingProgram, "uFrameIndex"), i - 1);
         glDispatchCompute(groupsX, groupsY, 1);
 
         GLenum error = glGetError();
@@ -369,7 +367,6 @@ void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures)
         maxWidth = std::max(maxWidth, texture.width);
         maxHeight = std::max(maxHeight, texture.height);
     }
-    loadedTextures.clear();
     if (textureArray != 0) {
         glDeleteTextures(1, &textureArray);
         textureArray = 0;
@@ -411,8 +408,6 @@ void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures)
             Logger::getInstance().log("Loading texture with no data", Logger::Level::WARNING);
         }
 
-        loadedTextures[texture.id] = layer;
-
         glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, std::max(1, texture.width), std::max(1, texture.height), 1,
                         GL_RGBA, GL_UNSIGNED_BYTE, texture.pixels.data());
         error = glGetError();
@@ -453,7 +448,7 @@ void RenderEngine::renderFrame(RenderTarget& target, const Scene& scene, int sam
     auto backgroundColor = scene.getBackgroundColor();
     loadTextures(scene.getTexturesData());
     uploadGPUBuffers(gpuData, bvh);
-    pathTracing(target, gpuData, camera, backgroundColor, samples);
+    pathTracing(target, camera, backgroundColor, samples);
 
     fillGbuffer(target, gpuData, camera);
     Logger::getInstance().log("Denoising started", Logger::Level::INFO);
