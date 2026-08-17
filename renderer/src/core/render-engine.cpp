@@ -448,7 +448,7 @@ void RenderEngine::renderFrame(RenderTarget& target, const Scene& scene, int sam
     auto backgroundColor = scene.getBackgroundColor();
     loadTextures(scene.getTexturesData());
     uploadGPUBuffers(gpuData, bvh);
-    pathTracing(target, gpuData, camera, backgroundColor, samples);
+    pathTracing(target, camera, backgroundColor, samples);
 
     fillGbuffer(target, gpuData, camera);
     Logger::getInstance().log("Denoising started", Logger::Level::INFO);
