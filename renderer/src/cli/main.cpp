@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <iostream>
 #include <print>
 
 #include "context-guard.hpp"
@@ -64,6 +65,7 @@ int main(int argc, char* argv[]) {
         printUsage(argv[0]);
         return 1;
     }
+    Logger logger("CLI");
     input = argv[4];
     bool showPlane = false;
     float planeSize = 0;
@@ -76,7 +78,7 @@ int main(int argc, char* argv[]) {
             printHelp(argv[0]);
             return EXIT_SUCCESS;
         } else if (arg == "-v" || arg == "--verbose")
-            Logger::getInstance().debug = true;
+            logger.showDebug = true;
         else if (arg == "-d" || arg == "--debug")
             debugImages = true;
         else if (arg == "-o" || arg == "--output") {
@@ -139,7 +141,7 @@ int main(int argc, char* argv[]) {
     }
     std::string outputFilename = outputPath.stem().string();
     try {
-        Logger::getInstance().log("Local renderer CLI-application started", Logger::Level::INFO);
+        logger.info("Renderer application started");
         TargetManager::init();
         RenderEngine engine;
         SceneLoader loader;
@@ -153,35 +155,30 @@ int main(int argc, char* argv[]) {
         auto* eglTarget = dynamic_cast<EglTarget*>(egl.get());
         if (eglTarget) {
             ContextGuard guard(*egl);
-            Logger::getInstance().log(
-                std::format("Writing into {}", (absoluteDirectoryPath / (outputFilename + ".png")).string()),
-                Logger::Level::DEBUG);
+            logger.debug(std::format("Writing into {}", (absoluteDirectoryPath / (outputFilename + ".png")).string()));
             utils::writeToPng(egl->getBufferData<uint8_t>(egl->getOutputTexture()), egl->getWidth(), egl->getHeight(),
                               4, absoluteDirectoryPath / (outputFilename + ".png"));
             if (debugImages) {
-                Logger::getInstance().log(
-                    std::format("Writing into {}", (absoluteDirectoryPath / (outputFilename + "-raw.png")).string()),
-                    Logger::Level::DEBUG);
+                logger.debug(
+                    std::format("Writing into {}", (absoluteDirectoryPath / (outputFilename + "-raw.png")).string()));
                 utils::writeToPng(egl->getBufferData<float>(egl->getRawTexture()), egl->getWidth(), egl->getHeight(), 4,
                                   absoluteDirectoryPath / (outputFilename + "-raw.png"));
 
-                Logger::getInstance().log(
-                    std::format("Writing into {}", (absoluteDirectoryPath / (outputFilename + "-albedo.png")).string()),
-                    Logger::Level::DEBUG);
+                logger.debug(std::format("Writing into {}",
+                                         (absoluteDirectoryPath / (outputFilename + "-albedo.png")).string()));
                 utils::writeToPng(egl->getBufferData<float>(egl->getAlbedoMap()), egl->getWidth(), egl->getHeight(), 4,
                                   absoluteDirectoryPath / (outputFilename + "-albedo.png"));
 
-                Logger::getInstance().log(
-                    std::format("Writing into {}", (absoluteDirectoryPath / (outputFilename + "-normal.png")).string()),
-                    Logger::Level::DEBUG);
+                logger.debug(std::format("Writing into {}",
+                                         (absoluteDirectoryPath / (outputFilename + "-normal.png")).string()));
                 utils::writeToPng(egl->getBufferData<float>(egl->getNormalMap()), egl->getWidth(), egl->getHeight(), 4,
                                   absoluteDirectoryPath / (outputFilename + "-normal.png"));
             }
         }
-        Logger::getInstance().log("Renderer application stopped successfully", Logger::Level::INFO);
+        logger.info("Renderer application stopped successfully");
         return EXIT_SUCCESS;
     } catch (const std::exception& e) {
-        Logger::getInstance().log("Application terminated due to error", Logger::Level::FATAL);
+        logger.fatal("Application terminated due to error");
         return EXIT_FAILURE;
     }
 }

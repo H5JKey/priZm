@@ -1,7 +1,5 @@
 #pragma once
-#include <iostream>
 #include <memory>
-#include <vector>
 
 #include "render-target.hpp"
 
@@ -23,10 +21,11 @@ class TargetManager {
     EGLDisplay getContext() const noexcept { return context; }
 
    private:
-    TargetManager() = default;
+    TargetManager();
     ~TargetManager();
 
    private:
+    Logger logger;
     EGLint majorVersion, minorVersion;
     EGLDisplay display;
     EGLConfig config;

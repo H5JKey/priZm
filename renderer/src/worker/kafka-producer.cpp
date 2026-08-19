@@ -4,7 +4,8 @@
 #include "message_builder.h"
 
 KafkaProducer::KafkaProducer(const std::string& brokerList)
-    : brokerList(brokerList),
+    : logger("KAFKA"),
+      brokerList(brokerList),
       config({
           {"metadata.broker.list", this->brokerList},
           {"broker.address.family", "v4"},
@@ -19,9 +20,9 @@ void KafkaProducer::produce(const std::string& topicName, const std::string& str
         builder.payload(strMessage);
         producer.produce(builder);
         producer.flush();
-        Logger::getInstance().log(std::format("Kafka produced message: {}", strMessage), Logger::Level::DEBUG);
+        logger.debug(std::format("Kafka produced message: {}", strMessage));
     } catch (const cppkafka::HandleException& e) {
-        Logger::getInstance().log(std::format("Failed to produce message: {}", e.what()), Logger::Level::ERROR);
+        logger.error(std::format("Failed to produce message: {}", e.what()));
         throw;
     }
 }

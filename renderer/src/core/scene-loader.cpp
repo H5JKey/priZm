@@ -13,18 +13,15 @@
 
 #include "fastgltf/core.hpp"
 #include "fastgltf/types.hpp"
-#include "logger.hpp"
 #include "utils.hpp"
 
-SceneLoader::SceneLoader() : parser(supportedExtensions) {}
+SceneLoader::SceneLoader() : parser(supportedExtensions), logger("SCENE") {}
 
 Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const fastgltf::Asset& asset) const {
-    Logger::getInstance().log(std::format("Loading texture {}", image.name), Logger::Level::DEBUG);
     try {
         return std::visit(
             fastgltf::visitor{
                 [&](const fastgltf::sources::URI& filePath) -> Scene::TextureData {
-                    Logger::getInstance().log("Loading texture from URI", Logger::Level::DEBUG);
                     assert(filePath.fileByteOffset == 0);
                     if (!filePath.uri.isLocalPath()) {
                         throw std::runtime_error("Non-local URI not supported");
@@ -38,7 +35,6 @@ Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const 
                     return Scene::TextureData{.pixels = std::move(result), .width = width, .height = height};
                 },
                 [&](const fastgltf::sources::Array& vector) -> Scene::TextureData {
-                    Logger::getInstance().log(std::format("Loading texture from Array"), Logger::Level::DEBUG);
                     std::vector<uint8_t> result;
                     int width, height, channels;
 
@@ -48,7 +44,6 @@ Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const 
                     return Scene::TextureData{.pixels = std::move(result), .width = width, .height = height};
                 },
                 [&](const fastgltf::sources::BufferView& view) -> Scene::TextureData {
-                    Logger::getInstance().log("Loading texture from URI", Logger::Level::DEBUG);
                     auto& bufferView = asset.bufferViews[view.bufferViewIndex];
                     auto& buffer = asset.buffers[bufferView.bufferIndex];
                     return std::visit(
@@ -75,8 +70,7 @@ Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const 
             },
             image.data);
     } catch (const std::exception& e) {
-        Logger::getInstance().log(std::format("Failed to load texture {}: {}", image.name, e.what()),
-                                  Logger::Level::ERROR);
+        logger.error(std::format("Failed to load texture {}: {}", image.name, e.what()));
         throw;
     }
 }
@@ -84,7 +78,6 @@ Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const 
 Scene::Material SceneLoader::loadMaterial(const fastgltf::Material& gltfMaterial,
                                           std::vector<Scene::TextureData>& textures,
                                           const fastgltf::Asset& asset) const {
-    Logger::getInstance().log(std::format("Loading material {}", gltfMaterial.name), Logger::Level::DEBUG);
     Scene::Material material;
 
     material.metalness = gltfMaterial.pbrData.metallicFactor;
@@ -126,9 +119,8 @@ Scene::Material SceneLoader::loadMaterial(const fastgltf::Material& gltfMaterial
                 try {
                     texture = std::move(loadTexture(image, asset));
                 } catch (const std::exception& e) {
-                    Logger::getInstance().log(
-                        std::format("Failed to load texture for material '{}': {}", gltfMaterial.name, e.what()),
-                        Logger::Level::ERROR);
+                    logger.error(
+                        std::format("Failed to load texture for material '{}': {}", gltfMaterial.name, e.what()));
                     throw;
                 }
                 texture.id = static_cast<int>(textures.size());
@@ -143,7 +135,7 @@ Scene::Material SceneLoader::loadMaterial(const fastgltf::Material& gltfMaterial
 
 Scene::Camera SceneLoader::loadCamera(const fastgltf::Camera::Perspective& gltfCamera,
                                       const fastgltf::Node& node) const {
-    Logger::getInstance().log("Loading camera", Logger::Level::DEBUG);
+    logger.debug("Loading camera");
     Scene::Camera camera;
 
     glm::mat4 worldMatrix(1.0f);
@@ -192,7 +184,6 @@ void SceneLoader::loadNode(const fastgltf::Node& node, const fastgltf::Asset& as
 
 Scene::Mesh SceneLoader::loadMesh(const fastgltf::Mesh& gltfMesh, const fastgltf::Asset& asset) const {
     Scene::Mesh mesh;
-    Logger::getInstance().log(std::format("Loading mesh {}", gltfMesh.name), Logger::Level::DEBUG);
     try {
         for (int i = 0; i < gltfMesh.primitives.size(); i++) {
             const auto& gltfPrimitive = gltfMesh.primitives[i];
@@ -262,33 +253,28 @@ Scene::Mesh SceneLoader::loadMesh(const fastgltf::Mesh& gltfMesh, const fastgltf
             mesh.primitives.push_back(std::move(primitive));
         }
     } catch (const std::exception& e) {
-        Logger::getInstance().log(std::format("Failed to load mesh {}: {}", gltfMesh.name, e.what()),
-                                  Logger::Level::ERROR);
+        logger.error(std::format("Failed to load mesh {}: {}", gltfMesh.name, e.what()));
         throw;
     }
     return mesh;
 }
 
 Scene SceneLoader::loadGltfFromFile(const std::filesystem::path& path) {
-    Logger::getInstance().log(std::format("Loading scene from file {}", path.string()), Logger::Level::DEBUG);
+    logger.debug(std::format("Loading scene from file {}", path.string()));
     if (!std::filesystem::exists(path)) {
-        Logger::getInstance().log(std::format("Failed to find {} ", path.string()), Logger::Level::ERROR);
+        logger.error(std::format("Failed to find {} ", path.string()));
         throw std::runtime_error(std::format("Failed to find {} ", path.string()));
     }
 
     auto data = fastgltf::GltfDataBuffer::FromPath(path);
     if (auto error = data.error(); error != fastgltf::Error::None) {
-        Logger::getInstance().log(
-            std::format("Failed to load {}. Error: {} ", path.string(), fastgltf::getErrorMessage(error)),
-            Logger::Level::ERROR);
+        logger.error(std::format("Failed to load {}. Error: {} ", path.string(), fastgltf::getErrorMessage(error)));
         throw std::runtime_error(
             std::format("Failed to load {}. Error: {} ", path.string(), fastgltf::getErrorMessage(error)));
     }
     auto asset = parser.loadGltf(data.get(), path.parent_path(), gltfOptions);
     if (auto error = asset.error(); error != fastgltf::Error::None) {
-        Logger::getInstance().log(
-            std::format("Failed to load {}. Error: {} ", path.string(), fastgltf::getErrorMessage(error)),
-            Logger::Level::ERROR);
+        logger.error(std::format("Failed to load {}. Error: {} ", path.string(), fastgltf::getErrorMessage(error)));
         throw std::runtime_error(
             std::format("Failed to load {}. Error: {} ", path.string(), fastgltf::getErrorMessage(error)));
     }
@@ -296,20 +282,16 @@ Scene SceneLoader::loadGltfFromFile(const std::filesystem::path& path) {
 }
 
 Scene SceneLoader::loadGltfFromMemory(const std::vector<uint8_t>& bytes) {
-    Logger::getInstance().log(std::format("Loading scene from memory. Size: {}", bytes.size()), Logger::Level::DEBUG);
+    logger.debug(std::format("Loading scene from memory. Size: {}", bytes.size()));
     auto data = fastgltf::GltfDataBuffer::FromBytes(reinterpret_cast<const std::byte*>(bytes.data()), bytes.size());
     if (auto error = data.error(); error != fastgltf::Error::None) {
-        Logger::getInstance().log(
-            std::format("Failed to load data from memory. Error: {} ", fastgltf::getErrorMessage(error)),
-            Logger::Level::ERROR);
+        logger.error(std::format("Failed to load data from memory. Error: {} ", fastgltf::getErrorMessage(error)));
         throw std::runtime_error(
             std::format("Failed to load data from memory. Error: {} ", fastgltf::getErrorMessage(error)));
     }
     auto asset = parser.loadGltf(data.get(), ".", gltfOptions);
     if (auto error = asset.error(); error != fastgltf::Error::None) {
-        Logger::getInstance().log(
-            std::format("Failed to load data from memory. Error: {} ", fastgltf::getErrorMessage(error)),
-            Logger::Level::ERROR);
+        logger.error(std::format("Failed to load data from memory. Error: {} ", fastgltf::getErrorMessage(error)));
         throw std::runtime_error(
             std::format("Failed to load data from meory. Error: {} ", fastgltf::getErrorMessage(error)));
     }
@@ -320,7 +302,7 @@ Scene SceneLoader::loadGltf(const fastgltf::Asset& asset) {
     Scene scene;
 
     /* Loading nodes recursively*/
-    Logger::getInstance().log("Loading nodes recursively", Logger::Level::DEBUG);
+    logger.debug("Loading nodes");
     const fastgltf::Scene& gltfScene = asset.scenes[asset.defaultScene.value()];
     for (std::size_t rootIdx : gltfScene.nodeIndices) {
         const fastgltf::Node& root = asset.nodes[rootIdx];
@@ -341,8 +323,7 @@ Scene SceneLoader::loadGltf(const fastgltf::Asset& asset) {
         }
     }
     if (!cameraFound) {
-        Logger::getInstance().log("Camera was not found in file. Default camera will be applied",
-                                  Logger::Level::WARNING);
+        logger.warning("Camera was not found in file. Default camera will be applied");
         glm::vec3 boxMax(-std::numeric_limits<float>::infinity()), boxMin(std::numeric_limits<float>::infinity());
         bool empty = true;
         for (const auto& mesh : scene.getMeshes()) {
@@ -375,10 +356,11 @@ Scene SceneLoader::loadGltf(const fastgltf::Asset& asset) {
     for (const auto& material : asset.materials) {
         scene.materials.push_back(loadMaterial(material, scene.textures, asset));
     }
+    logger.info(std::format("Scene loaded. Meshes: {}, Materials: {}, Textures: {}", scene.meshes.size(),
+                            scene.materials.size(), scene.textures.size()));
     return scene;
 }
 
-/* Add plane for better ligting visualization*/
 void SceneLoader::addPlane(Scene& scene, float planeSize) {
     glm::vec3 boxMax(-std::numeric_limits<float>::infinity()), boxMin(std::numeric_limits<float>::infinity());
     bool empty = true;

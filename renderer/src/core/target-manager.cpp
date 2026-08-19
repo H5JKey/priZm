@@ -1,5 +1,6 @@
 #include "target-manager.hpp"
 
+#include <format>
 #include <stdexcept>
 
 #include "logger.hpp"
@@ -9,18 +10,20 @@ TargetManager& TargetManager::getInstance() {
     return instance;
 }
 
+TargetManager::TargetManager() : logger("EGL") {}
+
 void TargetManager::init() {
     TargetManager& self = getInstance();
     if (!self.initialized) {
-        Logger::getInstance().log("Initializing EGL", Logger::Level::DEBUG);
+        self.logger.debug("Initializing EGL");
         self.display = eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
         if (self.display == EGL_NO_DISPLAY) {
-            Logger::getInstance().log("Failed to get EGL display", Logger::Level::FATAL);
-            throw std::runtime_error("Failed to get EGL display");
+            self.logger.fatal("Failed to get display");
+            throw std::runtime_error("Failed to get display");
         }
 
         if (!eglInitialize(self.display, &self.majorVersion, &self.minorVersion)) {
-            Logger::getInstance().log("Failed to initialize EGL", Logger::Level::FATAL);
+            self.logger.fatal("Failed to initialize EGL");
             throw std::runtime_error("Failed to initialize EGL");
         }
 
@@ -42,7 +45,7 @@ void TargetManager::init() {
 
         EGLint numConfigs;
         if (!eglChooseConfig(self.display, configAttribs, &self.config, 1, &numConfigs)) {
-            Logger::getInstance().log("Failed to choose config", Logger::Level::FATAL);
+            self.logger.fatal("Failed to choose config");
             throw std::runtime_error("Failed to choose config");
         }
 
@@ -52,32 +55,28 @@ void TargetManager::init() {
 
         if (!(self.context = eglCreateContext(self.display, self.config, EGL_NO_CONTEXT, contextAttribs))) {
             EGLint error = eglGetError();
-            Logger::getInstance().log("Failed to create EGL context. Error: " + std::to_string(error),
-                                      Logger::Level::FATAL);
+            self.logger.fatal("Failed to create EGL context. Error: " + std::to_string(error));
             throw std::runtime_error("Failed to create EGL context. Error: " + std::to_string(error));
         }
 
         EGLint surfaceAttribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
         if (!(self.dummySurface = eglCreatePbufferSurface(self.display, self.config, surfaceAttribs))) {
-            Logger::getInstance().log("Failed to initialize EGL surface", Logger::Level::FATAL);
+            self.logger.fatal("Failed to initialize EGL surface");
             throw std::runtime_error("Failed to initialize EGL surface");
         }
 
         if (!eglMakeCurrent(self.display, self.dummySurface, self.dummySurface, self.context)) {
-            Logger::getInstance().log("eglMakeCurrent for dummy surface in TargetManager::init failed",
-                                      Logger::Level::FATAL);
+            self.logger.fatal("eglMakeCurrent for dummy surface in TargetManager::init failed");
             throw std::runtime_error("eglMakeCurrent for dummy surface in TargetManager::init failed");
         }
 
         if (!gladLoadGL(eglGetProcAddress)) {
-            Logger::getInstance().log("gladLoadGL failed", Logger::Level::FATAL);
+            self.logger.fatal("gladLoadGL failed");
             throw std::runtime_error("gladLoadGL failed");
         }
-        Logger::getInstance().log(
-            std::format("OpenGL info:\n\tVendor   :  {}\n\tRenderer :  {}\n\tVersion  :  {}",
-                        (const char*)glGetString(GL_VENDOR), (const char*)glGetString(GL_RENDERER),
-                        (const char*)glGetString(GL_VERSION)),
-            Logger::Level::DEBUG);
+        self.logger.debug(std::format("OpenGL info:\n\tVendor   :  {}\n\tRenderer :  {}\n\tVersion  :  {}",
+                                      (const char*)glGetString(GL_VENDOR), (const char*)glGetString(GL_RENDERER),
+                                      (const char*)glGetString(GL_VERSION)));
 
         self.initialized = true;
     }
@@ -104,13 +103,13 @@ void TargetManager::terminate() {
         }
 
         self.initialized = false;
-        Logger::getInstance().log("EGL Terminated", Logger::Level::DEBUG);
+        self.logger.debug("EGL Terminated");
     }
 }
 
 std::shared_ptr<RenderTarget> TargetManager::createEGLTarget(int width, int height) {
     if (!initialized) {
-        Logger::getInstance().log("Failed to create EGLTarget: context wasnt created", Logger::Level::ERROR);
+        logger.error("Failed to create EGLTarget: context wasnt created");
         throw std::runtime_error("Failed to create EGLTarget: context wasnt created");
     }
     return std::shared_ptr<EglTarget>(new EglTarget(width, height, display, config, context));

@@ -4,24 +4,26 @@
 class Logger {
    public:
     enum class Level { INFO, DEBUG, WARNING, ERROR, FATAL };
-    bool debug;
+    static bool showDebug;
 
-    Logger(const Logger&) = delete;
-    Logger(Logger&&) = delete;
+    Logger(std::string_view scope);
 
-    void setMinLevel(Level level) { minLevel = level; }
-    Logger& operator=(const Logger&) = delete;
-    Logger& operator=(Logger&&) = delete;
+    static void setMinLevel(Level level) { minLevel = level; }
 
-    static Logger& getInstance();
-
-    void log(std::string_view message, Level level);
+    void info(std::string_view message) const;
+    void warning(std::string_view message) const;
+    void debug(std::string_view message) const;
+    void error(std::string_view message) const;
+    void fatal(std::string_view message) const;
 
     static std::string getStringFromLevel(Level level);
     static Level getLevelFromString(const std::string& level);
 
-   private:
-    Level minLevel;
-    Logger();
     ~Logger() = default;
+
+   private:
+    static Level minLevel;
+    std::string_view scope;
+
+    void log(std::string_view message, Level level) const;
 };

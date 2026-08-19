@@ -26,5 +26,5 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_SOURCE_DIR}/shaders
         ${CMAKE_BINARY_DIR}/shaders
-    COMMENT "Linking shaders to build directory"
+    COMMENT "Symlinking shaders to build directory"
 )

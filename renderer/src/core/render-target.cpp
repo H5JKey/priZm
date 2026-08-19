@@ -4,13 +4,12 @@
 #include <stdexcept>
 
 #include "context-guard.hpp"
-#include "logger.hpp"
 
 EglTarget::EglTarget(int width, int height, EGLDisplay display, EGLConfig config, EGLContext context)
-    : RenderTarget(width, height), display(display), context(context) {
+    : RenderTarget(width, height), display(display), context(context), logger("EGL") {
     EGLint surfaceAttribs[] = {EGL_WIDTH, width, EGL_HEIGHT, height, EGL_NONE};
     if (!(surface = eglCreatePbufferSurface(display, config, surfaceAttribs))) {
-        Logger::getInstance().log("Failed to initialize EGL surface", Logger::Level::ERROR);
+        logger.error("Failed to initialize surface");
         throw std::runtime_error("Failed to initialize EGL surface");
     }
     {
@@ -41,15 +40,14 @@ EglTarget::EglTarget(int width, int height, EGLDisplay display, EGLConfig config
         glBindTexture(GL_TEXTURE_2D, 0);
     }
     initialized = true;
-    Logger::getInstance().log(std::format("EGl target created ({}x{})", width, height), Logger::Level::DEBUG);
+    logger.debug(std::format("EGl target created ({}x{})", width, height));
 }
 
 void EglTarget::makeCurrent() const {
     eglMakeCurrent(display, surface, surface, context);
     EGLint error = eglGetError();
     if (error != EGL_SUCCESS) {
-        Logger::getInstance().log(std::format("eglMakeCurrent in EglTarget::makeCurrent failed. Error: {}", error),
-                                  Logger::Level::ERROR);
+        logger.error(std::format("eglMakeCurrent in EglTarget::makeCurrent failed. Error: {}", error));
         throw std::runtime_error(std::format("eglMakeCurrent in EglTarget::makeCurrent failed. Error: {}", error));
     }
 }
@@ -58,8 +56,7 @@ void EglTarget::release() const {
     eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     EGLint error = eglGetError();
     if (error != EGL_SUCCESS) {
-        Logger::getInstance().log(std::format("eglMakeCurrent in EglTarget::release failed. Error: {}", error),
-                                  Logger::Level::ERROR);
+        logger.error(std::format("eglMakeCurrent in EglTarget::release failed. Error: {}", error));
         throw std::runtime_error(std::format("eglMakeCurrent in EglTarget::release failed. Error: {}", error));
     }
 }
