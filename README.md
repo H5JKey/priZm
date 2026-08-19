@@ -36,6 +36,17 @@ priZm/
 
 ---
 
+### Quick Start
+
+```bash
+git clone https://github.com/H5JKey/priZm.git
+cd priZm
+cp renderer/.env.example renderer/.env
+docker compose up
+```
+
+---
+
 ### Renderer
 > Path tracing engine that can run as s standalone CLI application or as a distributed worker.
 
