@@ -5,21 +5,25 @@
 #include <iostream>
 #include <stdexcept>
 
-Logger::Logger() : minLevel(Logger::Level::INFO), debug(false) {}
+bool Logger::showDebug = false;
+Logger::Level Logger::minLevel = Logger::Level::INFO;
 
-Logger& Logger::getInstance() {
-    static Logger instance;
-    return instance;
-}
+Logger::Logger(std::string_view scope) : scope(scope) {}
 
-void Logger::log(std::string_view message, Logger::Level level) {
-    if (level == Level::DEBUG && debug == false) return;
+void Logger::log(std::string_view message, Logger::Level level) const {
+    if (level == Level::DEBUG && showDebug == false) return;
     if (level < minLevel) return;
-    std::clog << std ::format("[{:%Y-%m-%d %H:%M:%S}] [RENDER] [{}] {}",
-                              std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()),
+    std::clog << std ::format("[{:%Y-%m-%d %H:%M:%S}] [{}] [{}] {}",
+                              std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()), scope,
                               getStringFromLevel(level), message)
               << std::endl;
 }
+
+void Logger::info(std::string_view message) const { log(message, Logger::Level::INFO); }
+void Logger::warning(std::string_view message) const { log(message, Logger::Level::WARNING); }
+void Logger::debug(std::string_view message) const { log(message, Logger::Level::DEBUG); }
+void Logger::error(std::string_view message) const { log(message, Logger::Level::ERROR); }
+void Logger::fatal(std::string_view message) const { log(message, Logger::Level::FATAL); }
 
 std::string Logger::getStringFromLevel(Logger::Level level) {
     switch (level) {

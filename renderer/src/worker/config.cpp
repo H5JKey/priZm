@@ -1,5 +1,7 @@
 #include "config.hpp"
 
+#include <stdexcept>
+
 void Config::apply(env::dotenv dotenv) {
     try {
         if (dotenv.hasVariable("KAFKA_HOST")) kafkaHost_ = dotenv["KAFKA_HOST"];
@@ -18,9 +20,7 @@ void Config::apply(env::dotenv dotenv) {
         if (dotenv.hasVariable("RENDERER_LOG_DEBUG")) logDebug_ = dotenv["RENDERER_LOG_DEBUG"];
         if (dotenv.hasVariable("RENDERER_PREVIEW")) preview_ = dotenv["RENDERER_PREVIEW"];
     } catch (const env::Value::ValueError& e) {
-        Logger::getInstance().log(std::format("Invalid value format in .env file. Error: {}.", e.what()),
-                                  Logger::Level::ERROR);
-        throw;
+        throw std::runtime_error(std::format("Invalid value format in .env file. Error: {}.", e.what()));
     }
 }
 
@@ -41,9 +41,7 @@ void Config::fromEnvironment() {
         if (char* ptr = std::getenv("RENDERER_LOG_DEBUG")) logDebug_ = env::Value(ptr);
         if (char* ptr = std::getenv("RENDERER_PREVIEW")) preview_ = env::Value(ptr);
     } catch (const env::Value::ValueError& e) {
-        Logger::getInstance().log(std::format("Invalid environment variable value format. Error: {}.", e.what()),
-                                  Logger::Level::ERROR);
-        throw;
+        throw std::runtime_error(std::format("Invalid environment variable value format. Error: {}.", e.what()));
     }
 }
 

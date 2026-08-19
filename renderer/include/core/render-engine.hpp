@@ -1,16 +1,16 @@
 #pragma once
 #include <glad/gl.h>
 
-#include <map>
-#include <print>
 #include <random>
 
 #include "bvh-builder.hpp"
 #include "bvh.hpp"
 #include "denoiser.hpp"
 #include "glm/ext/vector_float4.hpp"
+#include "logger.hpp"
 #include "render-target.hpp"
 #include "scene.hpp"
+
 
 class RenderEngine {
     struct GPUMaterial {
@@ -39,6 +39,7 @@ class RenderEngine {
 
     Denoiser denoiser;
     MedianBuilder bvhBuilder;
+    Logger logger;
     GLuint pathTracingProgram = 0;
     GLuint postProcessingProgram = 0;
     GLuint gbufferProgram = 0;

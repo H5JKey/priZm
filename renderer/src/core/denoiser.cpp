@@ -1,5 +1,7 @@
 #include "denoiser.hpp"
 
+#include <stdexcept>
+
 #include "logger.hpp"
 #include "utils.hpp"
 
@@ -37,8 +39,9 @@ void Denoiser::denoise(RenderTarget& target) {
     filter.execute();
 
     const char* errorMessage;
-    if (device.getError(errorMessage) != oidn::Error::None)
-        Logger::getInstance().log(errorMessage, Logger::Level::ERROR);
+    if (device.getError(errorMessage) != oidn::Error::None) {
+        throw std::runtime_error(errorMessage);
+    }
 
     std::vector<float> denoisedImageData(pixelCount * 4, 0);
     utils::rgbToRgba(resultBufferData, denoisedImageData);

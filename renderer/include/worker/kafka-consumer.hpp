@@ -4,7 +4,10 @@
 #include <optional>
 #include <string>
 
+#include "logger.hpp"
+
 class KafkaConsumer {
+    Logger logger;
     std::string topicName;
     std::string groupId;
     std::string brokerList;

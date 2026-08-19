@@ -1,5 +1,6 @@
 #include "render-engine.hpp"
 
+#include <exception>
 #include <string>
 
 #include "context-guard.hpp"
@@ -54,19 +55,19 @@ void RenderEngine::destroy() {
     }
 }
 
-RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilder(-1, 4) {
+RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilder(-1, 4), logger("RENDERER") {
     try {
-        Logger::getInstance().log("Compiling path tracing shader", Logger::Level::DEBUG);
+        logger.debug("Compiling path tracing shader");
         pathTracingProgram = compileShader(utils::readFromFile("shaders/path-tracing.glsl"));
 
-        Logger::getInstance().log("Compiling post processing shader", Logger::Level::DEBUG);
+        logger.debug("Compiling post processing shader");
         postProcessingProgram = compileShader(utils::readFromFile("shaders/post-processing.glsl"));
 
-        Logger::getInstance().log("Compiling gbuffer shader", Logger::Level::DEBUG);
+        logger.debug("Compiling gbuffer shader");
         gbufferProgram = compileShader(utils::readFromFile("shaders/gbuffer.glsl"));
 
     } catch (const std::exception& e) {
-        Logger::getInstance().log(e.what(), Logger::Level::FATAL);
+        logger.fatal(e.what());
         destroy();
         throw;
     }
@@ -76,7 +77,7 @@ RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilde
     error = glGetError();
     if (error != 0) {
         destroy();
-        Logger::getInstance().log("Failed to create vertexSSBO. Error: " + std::to_string(error), Logger::Level::FATAL);
+        logger.fatal("Failed to create vertexSSBO. Error: " + std::to_string(error));
         throw std::runtime_error("Failed to create vertexSSBO. Error: " + std::to_string(error));
     }
 
@@ -84,8 +85,7 @@ RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilde
     error = glGetError();
     if (error != 0) {
         destroy();
-        Logger::getInstance().log("Failed to create texCoordSSBO. Error: " + std::to_string(error),
-                                  Logger::Level::FATAL);
+        logger.fatal("Failed to create texCoordSSBO. Error: " + std::to_string(error));
         throw std::runtime_error("Failed to create texCoordSSBO. Error: " + std::to_string(error));
     }
 
@@ -93,8 +93,7 @@ RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilde
     error = glGetError();
     if (error != 0) {
         destroy();
-        Logger::getInstance().log("Failed to create vertexIndexSSBO. Error: " + std::to_string(error),
-                                  Logger::Level::FATAL);
+        logger.fatal("Failed to create vertexIndexSSBO. Error: " + std::to_string(error));
         throw std::runtime_error("Failed to create vertexIndexSSBO. Error: " + std::to_string(error));
     }
 
@@ -102,8 +101,7 @@ RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilde
     error = glGetError();
     if (error != 0) {
         destroy();
-        Logger::getInstance().log("Failed to create materialSSBO. Error: " + std::to_string(error),
-                                  Logger::Level::FATAL);
+        logger.fatal("Failed to create materialSSBO. Error: " + std::to_string(error));
         throw std::runtime_error("Failed to create materialSSBO. Error: " + std::to_string(error));
     }
 
@@ -111,8 +109,7 @@ RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilde
     error = glGetError();
     if (error != 0) {
         destroy();
-        Logger::getInstance().log("Failed to create materialIndexSSBO. Error: " + std::to_string(error),
-                                  Logger::Level::FATAL);
+        logger.fatal("Failed to create materialIndexSSBO. Error: " + std::to_string(error));
         throw std::runtime_error("Failed to create materialIndexSSBO. Error: " + std::to_string(error));
     }
 
@@ -120,8 +117,7 @@ RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilde
     error = glGetError();
     if (error != 0) {
         destroy();
-        Logger::getInstance().log("Failed to create bvhNodesSSBO. Error: " + std::to_string(error),
-                                  Logger::Level::FATAL);
+        logger.fatal("Failed to create bvhNodesSSBO. Error: " + std::to_string(error));
         throw std::runtime_error("Failed to create bvhNodesSSBO. Error: " + std::to_string(error));
     }
 
@@ -129,8 +125,7 @@ RenderEngine::RenderEngine() : gen(rd()), uniformDistr(0, 0xFFFFFFFF), bvhBuilde
     error = glGetError();
     if (error != 0) {
         destroy();
-        Logger::getInstance().log("Failed to create bvhTrianglesSSBO. Error: " + std::to_string(error),
-                                  Logger::Level::FATAL);
+        logger.fatal("Failed to create bvhTrianglesSSBO. Error: " + std::to_string(error));
         throw std::runtime_error("Failed to create bvhTrianglesSSBO. Error: " + std::to_string(error));
     }
 }
@@ -152,7 +147,7 @@ GLuint RenderEngine::compileShader(const std::string& source) {
 
         std::string errorLog(log.data(), logLength);
 
-        Logger::getInstance().log("Shader compilation failed\n" + errorLog, Logger::Level::ERROR);
+        logger.error("Shader compilation failed\n" + errorLog);
         glDeleteShader(shader);
         throw std::runtime_error("Shader compilation failed: " + errorLog);
     }
@@ -171,7 +166,7 @@ GLuint RenderEngine::compileShader(const std::string& source) {
 
         std::string errorLog(log.data(), logLength);
         glDeleteShader(shader);
-        Logger::getInstance().log("Program linking failed" + errorLog, Logger::Level::ERROR);
+        logger.error("Program linking failed" + errorLog);
         throw std::runtime_error("Program linking failed" + errorLog);
     }
 
@@ -181,7 +176,7 @@ GLuint RenderEngine::compileShader(const std::string& source) {
 
 void RenderEngine::pathTracing(RenderTarget& target, const Scene::Camera& camera, const glm::vec3 backgroundColor,
                                int samples) {
-    Logger::getInstance().log("Path tracing started", Logger::Level::INFO);
+    logger.info("Path tracing started");
 
     glUseProgram(pathTracingProgram);
 
@@ -207,7 +202,7 @@ void RenderEngine::pathTracing(RenderTarget& target, const Scene::Camera& camera
     auto start = std::chrono::steady_clock::now();
     for (int i = 1; i <= samples; i++) {
         if (i % 5 == 0 || i == samples) {
-            Logger::getInstance().log(std::format("Path tracing progress: {}/{}", i, samples), Logger::Level::INFO);
+            logger.info(std::format("Path tracing progress: {}/{}", i, samples));
         }
         glUniform1ui(glGetUniformLocation(pathTracingProgram, "uSeed"), uniformDistr(gen));
         glUniform1ui(glGetUniformLocation(pathTracingProgram, "uFrameIndex"), i - 1);
@@ -215,8 +210,7 @@ void RenderEngine::pathTracing(RenderTarget& target, const Scene::Camera& camera
 
         GLenum error = glGetError();
         if (error != 0) {
-            Logger::getInstance().log("glDispatchCompute for path tracing failed. Error: " + std::to_string(error),
-                                      Logger::Level::ERROR);
+            logger.error("glDispatchCompute for path tracing failed. Error: " + std::to_string(error));
             throw std::runtime_error("glDispatchCompute for path tracing failed. Error: " + std::to_string(error));
         }
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -224,13 +218,13 @@ void RenderEngine::pathTracing(RenderTarget& target, const Scene::Camera& camera
     }
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    Logger::getInstance().log(std::format("Path tracing finished in {}ms", duration.count()), Logger::Level::INFO);
+    logger.info(std::format("Path tracing finished in {}ms", duration.count()));
 
     glUseProgram(0);
 }
 
 void RenderEngine::fillGbuffer(RenderTarget& target, const GPUData& gpuData, const Scene::Camera& camera) {
-    Logger::getInstance().log("Filling gbuffer", Logger::Level::DEBUG);
+    logger.debug("Filling gbuffer");
     glUseProgram(gbufferProgram);
     glBindImageTexture(0, target.getNormalMap(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glBindImageTexture(1, target.getAlbedoMap(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -252,20 +246,19 @@ void RenderEngine::fillGbuffer(RenderTarget& target, const GPUData& gpuData, con
     glDispatchCompute(groupsX, groupsY, 1);
     GLenum error = glGetError();
     if (error != 0) {
-        Logger::getInstance().log("glDispatchCompute for gbuffer failed. Error: " + std::to_string(error),
-                                  Logger::Level::ERROR);
+        logger.error("glDispatchCompute for gbuffer failed. Error: " + std::to_string(error));
         throw std::runtime_error("glDispatchCompute for gbuffer failed. Error: " + std::to_string(error));
     }
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glFinish();
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    Logger::getInstance().log(std::format("gbuffer filling finished in {}ms", duration.count()), Logger::Level::DEBUG);
+    logger.debug(std::format("gbuffer filling finished in {}ms", duration.count()));
     glUseProgram(0);
 }
 
 void RenderEngine::postProcess(RenderTarget& target) const {
-    Logger::getInstance().log("Post processing started", Logger::Level::INFO);
+    logger.info("Post processing started");
     glUseProgram(postProcessingProgram);
     glBindImageTexture(0, target.getDenoisedTexture(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
     glBindImageTexture(1, target.getOutputTexture(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
@@ -275,20 +268,19 @@ void RenderEngine::postProcess(RenderTarget& target) const {
     glDispatchCompute(groupsX, groupsY, 1);
     GLenum error = glGetError();
     if (error != 0) {
-        Logger::getInstance().log("glDispatchCompute for post processing failed. Error: " + std::to_string(error),
-                                  Logger::Level::ERROR);
+        logger.error("glDispatchCompute for post processing failed. Error: " + std::to_string(error));
         throw std::runtime_error("glDispatchCompute for post processing failed. Error: " + std::to_string(error));
     }
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glFinish();
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    Logger::getInstance().log(std::format("Post processing finished in {}ms", duration.count()), Logger::Level::INFO);
+    logger.info(std::format("Post processing finished in {}ms", duration.count()));
     glUseProgram(0);
 }
 
 void RenderEngine::uploadGPUBuffers(const GPUData& gpuData, const BVH& bvh) {
-    Logger::getInstance().log("Filling GPU buffers with scene data", Logger::Level::DEBUG);
+    logger.debug("Filling GPU buffers with scene data");
     const auto& vertices = gpuData.vertices;
     const auto& texCoords = gpuData.texCoords;
     const auto& vertexIndices = gpuData.vertexIndices;
@@ -296,9 +288,8 @@ void RenderEngine::uploadGPUBuffers(const GPUData& gpuData, const BVH& bvh) {
     const auto& materialIndices = gpuData.materialIndices;
     const auto& bvhNodes = bvh.getNodes();
     const auto& bvhTriangles = bvh.getTriangles();
-    Logger::getInstance().log(std::format("Scene info: \n\tTotal triangles: {}\n\tBVH nodes: {}\n\tBVH depth: {}",
-                                          vertexIndices.size() / 3, bvhNodes.size(), bvh.getDepth()),
-                              Logger::Level::DEBUG);
+    logger.debug(std::format("Scene info: \n\tTotal triangles: {}\n\tBVH nodes: {}\n\tBVH depth: {}",
+                             vertexIndices.size() / 3, bvhNodes.size(), bvh.getDepth()));
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertexSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, vertices.size() * sizeof(glm::vec4), vertices.data(), GL_STATIC_DRAW);
@@ -324,7 +315,7 @@ void RenderEngine::uploadGPUBuffers(const GPUData& gpuData, const BVH& bvh) {
 }
 
 RenderEngine::GPUData RenderEngine::convertSceneToGPUData(const Scene& scene) {
-    Logger::getInstance().log("Preparing scene data for GPU", Logger::Level::DEBUG);
+    logger.debug("Preparing scene data for GPU");
     GPUData data;
     for (const auto& mesh : scene.getMeshes()) {
         int indexOffset = data.vertices.size();
@@ -360,7 +351,7 @@ RenderEngine::GPUData RenderEngine::convertSceneToGPUData(const Scene& scene) {
 }
 
 void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures) {
-    Logger::getInstance().log("Loading textures to GPU", Logger::Level::DEBUG);
+    logger.debug("Loading textures to GPU");
     int maxWidth = 1;
     int maxHeight = 1;
     for (const auto& texture : textures) {
@@ -376,16 +367,14 @@ void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures)
     glGenTextures(1, &textureArray);
     error = glGetError();
     if (error) {
-        Logger::getInstance().log("glGenTextures for textureArray failed. Error: " + std::to_string(error),
-                                  Logger::Level::ERROR);
+        logger.error("glGenTextures for textureArray failed. Error: " + std::to_string(error));
         throw std::runtime_error("glGenTextures for textureArray failed. Error: " + std::to_string(error));
     }
 
     glBindTexture(GL_TEXTURE_2D_ARRAY, textureArray);
     error = glGetError();
     if (error) {
-        Logger::getInstance().log("glBindTexture for textureArray failed. Error: " + std::to_string(error),
-                                  Logger::Level::ERROR);
+        logger.error("glBindTexture for textureArray failed. Error: " + std::to_string(error));
         throw std::runtime_error("glBindTexture for textureArray failed. Error: " + std::to_string(error));
     }
 
@@ -394,26 +383,23 @@ void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures)
 
     error = glGetError();
     if (error) {
-        Logger::getInstance().log("glTexStorage3D for textureArray failed. Error: " + std::to_string(error),
-                                  Logger::Level::ERROR);
+        logger.error("glTexStorage3D for textureArray failed. Error: " + std::to_string(error));
         throw std::runtime_error("glTexStorage3D for textureArray failed. Error: " + std::to_string(error));
     }
 
     int layer = 0;
     for (const auto& texture : textures) {
-        Logger::getInstance().log(std::format("Loading texture {} to GPU ({}x{}), layer {}", texture.id, texture.width,
-                                              texture.height, layer),
-                                  Logger::Level::DEBUG);
+        logger.debug(std::format("Loading texture {} to GPU ({}x{}), layer {}", texture.id, texture.width,
+                                 texture.height, layer));
         if (texture.pixels.empty()) {
-            Logger::getInstance().log("Loading texture with no data", Logger::Level::WARNING);
+            logger.warning("Loading texture with no data");
         }
 
         glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, std::max(1, texture.width), std::max(1, texture.height), 1,
                         GL_RGBA, GL_UNSIGNED_BYTE, texture.pixels.data());
         error = glGetError();
         if (error) {
-            Logger::getInstance().log("glTexSubImage3D for textureArray failed. Error: " + std::to_string(error),
-                                      Logger::Level::ERROR);
+            logger.error("glTexSubImage3D for textureArray failed. Error: " + std::to_string(error));
             throw std::runtime_error("glTexSubImage3D for textureArray failed. Error: " + std::to_string(error));
         }
         layer++;
@@ -429,35 +415,38 @@ void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures)
 }
 
 void RenderEngine::renderFrame(RenderTarget& target, const Scene& scene, int samples) {
-    Logger::getInstance().log(std::format("Rendering started ({}x{})", target.getWidth(), target.getHeight()),
-                              Logger::Level::INFO);
-    ContextGuard context(target);
-    glClearTexImage(target.getRawTexture(), 0, GL_RGBA, GL_FLOAT, nullptr);
-    glClearTexImage(target.getNormalMap(), 0, GL_RGBA, GL_FLOAT, nullptr);
-    glClearTexImage(target.getAlbedoMap(), 0, GL_RGBA, GL_FLOAT, nullptr);
-    glClearTexImage(target.getOutputTexture(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    GPUData gpuData = convertSceneToGPUData(scene);
-    BVH bvh;
     try {
-        bvh = std::move(bvhBuilder.build(gpuData.vertices, gpuData.vertexIndices));
-    } catch (const std::exception& e) {
-        Logger::getInstance().log(std::format("BVH building failed: {}", e.what()), Logger::Level::ERROR);
-        throw;
-    }
-    auto camera = scene.getCamera();
-    auto backgroundColor = scene.getBackgroundColor();
-    loadTextures(scene.getTexturesData());
-    uploadGPUBuffers(gpuData, bvh);
-    pathTracing(target, camera, backgroundColor, samples);
+        logger.info(std::format("Rendering started ({}x{})", target.getWidth(), target.getHeight()));
+        ContextGuard context(target);
+        glClearTexImage(target.getRawTexture(), 0, GL_RGBA, GL_FLOAT, nullptr);
+        glClearTexImage(target.getNormalMap(), 0, GL_RGBA, GL_FLOAT, nullptr);
+        glClearTexImage(target.getAlbedoMap(), 0, GL_RGBA, GL_FLOAT, nullptr);
+        glClearTexImage(target.getOutputTexture(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        GPUData gpuData = convertSceneToGPUData(scene);
+        BVH bvh;
+        try {
+            bvh = std::move(bvhBuilder.build(gpuData.vertices, gpuData.vertexIndices));
+        } catch (const std::exception& e) {
+            logger.error(std::format("BVH building failed: {}", e.what()));
+            throw;
+        }
+        auto camera = scene.getCamera();
+        auto backgroundColor = scene.getBackgroundColor();
+        loadTextures(scene.getTexturesData());
+        uploadGPUBuffers(gpuData, bvh);
+        pathTracing(target, camera, backgroundColor, samples);
 
-    fillGbuffer(target, gpuData, camera);
-    Logger::getInstance().log("Denoising started", Logger::Level::INFO);
-    auto start = std::chrono::steady_clock::now();
-    denoiser.denoise(target);
-    auto end = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    Logger::getInstance().log(std::format("Denoising finished in {}ms", duration.count()), Logger::Level::INFO);
-    postProcess(target);
+        fillGbuffer(target, gpuData, camera);
+        logger.info("Denoising started");
+        auto start = std::chrono::steady_clock::now();
+        denoiser.denoise(target);
+        auto end = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        logger.info(std::format("Denoising finished in {}ms", duration.count()));
+        postProcess(target);
+    } catch (const std::exception& e) {
+        logger.error(std::format("Rendering failed. Reason: {}", e.what()));
+    }
 }
 
 RenderEngine::~RenderEngine() { destroy(); }

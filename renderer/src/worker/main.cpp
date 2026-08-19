@@ -30,18 +30,18 @@ std::vector<uint8_t> renderPipeline(RenderEngine& engine, Scene scene, int width
     return utils::writeToPng(data, width, height, 4);
 }
 
+Logger logger("WORKER");
 int main() try {
     env::dotenv dotenv(".env");
     Config config;
     config.apply(dotenv);
     config.fromEnvironment();
 
+    Logger::showDebug = config.logDebug();
+    Logger::setMinLevel(config.logLevel());
+
     Aws::InitAPI(options);
-    Logger::getInstance().debug = config.logDebug();
-
-    Logger::getInstance().setMinLevel(config.logLevel());
-
-    Logger::getInstance().log(std::format("Aws initialized"), Logger::Level::DEBUG);
+    logger.debug(std::format("Aws initialized"));
     TargetManager::init();
     RenderEngine engine;
     SceneLoader sceneLoader;
@@ -49,7 +49,7 @@ int main() try {
     S3Client s3client(config.s3Host(), Aws::Auth::AWSCredentials(config.s3AccessKey(), config.s3SecretKey()));
     KafkaConsumer consumer(config.kafkaHost(), config.kafkaGroupID(), config.kafkaTopicInput());
     KafkaProducer producer(config.kafkaHost());
-    Logger::getInstance().log("Renderer worker started", Logger::Level::INFO);
+    logger.info("Renderer-worker started");
 
     while (true) {
         json inputJson;
@@ -58,9 +58,9 @@ int main() try {
         std::string bucket, key;
         std::string modelName;
         try {
-            Logger::getInstance().log(std::format("Listening for messages..."), Logger::Level::INFO);
+            logger.info(std::format("Listening for messages..."));
             std::string message = consumer.consume();
-            Logger::getInstance().log(std::format("Message processing started"), Logger::Level::INFO);
+            logger.info(std::format("Message processing started"));
             try {
                 inputJson = json::parse(message);
                 width = inputJson["render"]["width"];
@@ -70,9 +70,7 @@ int main() try {
                 bucket = inputJson["file"]["bucket"];
                 key = inputJson["file"]["key"];
             } catch (const std::exception& e) {
-                Logger::getInstance().log(
-                    std::format("Failed to parse json from string: {}. Error: {}", message, e.what()),
-                    Logger::Level::ERROR);
+                logger.error(std::format("Failed to parse json from string: {}. Error: {}", message, e.what()));
                 throw;
             }
             std::vector<uint8_t> data;
@@ -105,19 +103,16 @@ int main() try {
                     {"key", outputKey},
                 };
             } catch (const std::exception& e) {
-                Logger::getInstance().log(std::format("Failed to generate output json: {}", e.what()),
-                                          Logger::Level::ERROR);
+                logger.error(std::format("Failed to generate output json: {}", e.what()));
                 throw;
             }
 
             producer.produce(config.kafkaTopicOutput(), outputJson.dump());
             consumer.commit();
         } catch (const std::exception& e) {
-            Logger::getInstance().log(
-                std::format("Processing message: (offset = {}, partition = {}) failed. Reason: {}",
-                            consumer.lastMessage.value().get_offset(), consumer.lastMessage.value().get_partition(),
-                            e.what()),
-                Logger::Level::ERROR);
+            logger.error(std::format("Processing message: (offset = {}, partition = {}) failed. Reason: {}",
+                                     consumer.lastMessage.value().get_offset(),
+                                     consumer.lastMessage.value().get_partition(), e.what()));
             int retries = 0;
             if (inputJson.contains("retry_count")) {
                 retries = inputJson["retry_count"];
@@ -134,18 +129,16 @@ int main() try {
             consumer.commit();
             continue;
         }
-        Logger::getInstance().log(std::format("Current message processing finished successfully"), Logger::Level::INFO);
+        logger.info(std::format("Current message processing finished successfully"));
     }
-    Logger::getInstance().log("Renderer application stopped successfully", Logger::Level::INFO);
+    logger.info("Renderer worker stopped successfully");
     Aws::ShutdownAPI(options);
     return EXIT_SUCCESS;
 } catch (const env::dotenv::ParseError& e) {
-    Logger::getInstance().log(
-        std::format("Failed to parse .env file '{}' at line {}. Error: {}", e.filename, e.line, e.what()),
-        Logger::Level::ERROR);
+    logger.error(std::format("Failed to parse .env file '{}' at line {}. Error: {}", e.filename, e.line, e.what()));
     return EXIT_FAILURE;
 } catch (const std::exception& e) {
     Aws::ShutdownAPI(options);
-    Logger::getInstance().log(std::format("Application terminated due to error: {}", e.what()), Logger::Level::FATAL);
+    logger.fatal(std::format("Worker terminated due to error: {}", e.what()));
     return EXIT_FAILURE;
 }

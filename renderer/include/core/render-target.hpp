@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "logger.hpp"
+
 class TargetManager;
 
 class RenderTarget {
@@ -48,7 +50,6 @@ class RenderTarget {
 };
 
 class EglTarget : public RenderTarget {
-   private:
     friend class TargetManager;
     EglTarget(int width, int height, EGLDisplay display, EGLConfig config, EGLContext context);
 
@@ -57,6 +58,7 @@ class EglTarget : public RenderTarget {
     EGLDisplay display;
     EGLSurface surface;
     EGLContext context;
+    Logger logger;
 
    public:
     ~EglTarget();

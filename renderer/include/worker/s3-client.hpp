@@ -5,7 +5,10 @@
 #include <string_view>
 #include <vector>
 
+#include "logger.hpp"
+
 class S3Client {
+    Logger logger;
     Aws::S3::S3Client s3Client;
 
    public:

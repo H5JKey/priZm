@@ -45,7 +45,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_SOURCE_DIR}/tests/data
         ${CMAKE_BINARY_DIR}/tests/data
-    COMMENT "Linking tests data to build directory"
+    COMMENT "Symlinking tests data to build directory"
 )
 
 add_custom_command(
@@ -53,7 +53,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_SOURCE_DIR}/tests/asan.supp
         ${CMAKE_BINARY_DIR}/tests/asan.supp
-    COMMENT "Linking ASan suppression file to build directory"
+    COMMENT "Symlinking ASan suppression file to build directory"
 )
 
 

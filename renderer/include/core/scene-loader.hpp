@@ -4,9 +4,11 @@
 #include <fastgltf/types.hpp>
 #include <filesystem>
 
+#include "logger.hpp"
 #include "scene.hpp"
 
 class SceneLoader {
+    Logger logger;
     static constexpr auto supportedExtensions =
         fastgltf::Extensions::KHR_mesh_quantization | fastgltf::Extensions::KHR_texture_transform |
         fastgltf::Extensions::KHR_materials_variants | fastgltf::Extensions::KHR_materials_transmission |
