@@ -226,7 +226,7 @@ Scene::Mesh SceneLoader::loadMesh(const fastgltf::Mesh& gltfMesh, const fastgltf
                         mesh.texCoords[texIdx] = glm::vec4(uv.x(), uv.y(), 1.0f, 1.0f);
                     });
             } else {
-                mesh.texCoords.insert(mesh.texCoords.end(), mesh.vertices.size(), glm::vec2(0.0f));
+                mesh.texCoords.insert(mesh.texCoords.end(), vertexCount, glm::vec2(0.0f));
             }
             if (!gltfPrimitive.indicesAccessor.has_value()) {
                 throw std::runtime_error(std::format("No value at indicesAccessor for primitive", i));

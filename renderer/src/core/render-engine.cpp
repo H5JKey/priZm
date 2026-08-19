@@ -445,6 +445,7 @@ void RenderEngine::renderFrame(RenderTarget& target, const Scene& scene, int sam
         postProcess(target);
     } catch (const std::exception& e) {
         logger.error(std::format("Rendering failed. Reason: {}", e.what()));
+        throw;
     }
 }
 
