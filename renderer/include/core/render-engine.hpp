@@ -11,7 +11,6 @@
 #include "render-target.hpp"
 #include "scene.hpp"
 
-
 class RenderEngine {
     struct GPUMaterial {
         glm::vec4 albedo;
