@@ -42,7 +42,7 @@ priZm/
 git clone https://github.com/H5JKey/priZm.git
 cd priZm
 cp renderer/.env.example renderer/.env
-docker compose up
+docker compose up -d
 ```
 
 ---
