@@ -18,12 +18,10 @@
 SceneLoader::SceneLoader() : parser(supportedExtensions), logger("SCENE") {}
 
 Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const fastgltf::Asset& asset) const {
-    logger.debug(std::format("Loading texture {}", image.name));
     try {
         return std::visit(
             fastgltf::visitor{
                 [&](const fastgltf::sources::URI& filePath) -> Scene::TextureData {
-                    logger.debug("Loading texture from URI");
                     assert(filePath.fileByteOffset == 0);
                     if (!filePath.uri.isLocalPath()) {
                         throw std::runtime_error("Non-local URI not supported");
@@ -37,7 +35,6 @@ Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const 
                     return Scene::TextureData{.pixels = std::move(result), .width = width, .height = height};
                 },
                 [&](const fastgltf::sources::Array& vector) -> Scene::TextureData {
-                    logger.debug(std::format("Loading texture from Array"));
                     std::vector<uint8_t> result;
                     int width, height, channels;
 
@@ -47,7 +44,6 @@ Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const 
                     return Scene::TextureData{.pixels = std::move(result), .width = width, .height = height};
                 },
                 [&](const fastgltf::sources::BufferView& view) -> Scene::TextureData {
-                    logger.debug("Loading texture from URI");
                     auto& bufferView = asset.bufferViews[view.bufferViewIndex];
                     auto& buffer = asset.buffers[bufferView.bufferIndex];
                     return std::visit(
@@ -82,7 +78,6 @@ Scene::TextureData SceneLoader::loadTexture(const fastgltf::Image& image, const 
 Scene::Material SceneLoader::loadMaterial(const fastgltf::Material& gltfMaterial,
                                           std::vector<Scene::TextureData>& textures,
                                           const fastgltf::Asset& asset) const {
-    logger.debug(std::format("Loading material {}", gltfMaterial.name));
     Scene::Material material;
 
     material.metalness = gltfMaterial.pbrData.metallicFactor;
@@ -189,7 +184,6 @@ void SceneLoader::loadNode(const fastgltf::Node& node, const fastgltf::Asset& as
 
 Scene::Mesh SceneLoader::loadMesh(const fastgltf::Mesh& gltfMesh, const fastgltf::Asset& asset) const {
     Scene::Mesh mesh;
-    logger.debug(std::format("Loading mesh {}", gltfMesh.name));
     try {
         for (int i = 0; i < gltfMesh.primitives.size(); i++) {
             const auto& gltfPrimitive = gltfMesh.primitives[i];
@@ -362,6 +356,8 @@ Scene SceneLoader::loadGltf(const fastgltf::Asset& asset) {
     for (const auto& material : asset.materials) {
         scene.materials.push_back(loadMaterial(material, scene.textures, asset));
     }
+    logger.info(std::format("Scene loaded. Meshes: {}, Materials: {}, Textures: {}", scene.meshes.size(),
+                            scene.materials.size(), scene.textures.size()));
     return scene;
 }
 

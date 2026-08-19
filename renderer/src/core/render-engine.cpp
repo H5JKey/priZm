@@ -351,7 +351,6 @@ RenderEngine::GPUData RenderEngine::convertSceneToGPUData(const Scene& scene) {
 }
 
 void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures) {
-    logger.debug("Loading textures to GPU");
     int maxWidth = 1;
     int maxHeight = 1;
     for (const auto& texture : textures) {
@@ -389,8 +388,6 @@ void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures)
 
     int layer = 0;
     for (const auto& texture : textures) {
-        logger.debug(std::format("Loading texture {} to GPU ({}x{}), layer {}", texture.id, texture.width,
-                                 texture.height, layer));
         if (texture.pixels.empty()) {
             logger.warning("Loading texture with no data");
         }
@@ -412,6 +409,8 @@ void RenderEngine::loadTextures(const std::vector<Scene::TextureData>& textures)
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 0);
 
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    logger.debug(std::format("Textures uploaded to GPU: {} layers", layer));
 }
 
 void RenderEngine::renderFrame(RenderTarget& target, const Scene& scene, int samples) {
