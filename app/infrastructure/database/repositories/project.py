@@ -32,8 +32,28 @@ class ProjectRepository(AbstractProjectRepository):
         result = await self.session.execute(stmt)
         return result.scalar()
 
-    async def get_user_projects(self, user_id: int) -> list[Project]:
-        stmt = select(Project).where(Project.user_id == user_id)
+    async def get_public_projects(self, size: int, page: int) -> list[Project]:
+        stmt = (
+            select(Project)
+            .where(Project.visibility == ProjectVisibility.public)
+            .limit(size)
+            .offset(size * (page - 1))
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_user_projects(
+        self,
+        user_id: int,
+        size: int,
+        page: int,
+    ) -> list[Project]:
+        stmt = (
+            select(Project)
+            .where(Project.user_id == user_id)
+            .limit(size)
+            .offset(size * (page - 1))
+        )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 

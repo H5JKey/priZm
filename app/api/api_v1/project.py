@@ -1,9 +1,12 @@
 from dependencies.annotations import (
     AuthUserByAccessTokenDep,
     MinioClientDep,
+    PaginationPageDep,
+    PaginationSizeDep,
     ProjectServiceDep,
 )
-from fastapi import APIRouter, status
+from dependencies.auth import get_auth_user_by_access_token
+from fastapi import APIRouter, Depends, status
 from schemas.project import (
     ProjectPartialUpdate,
     ProjectResponseList,
@@ -20,24 +23,6 @@ router = APIRouter(
 
 
 @router.get(
-    "/{project_id}",
-    response_model=ProjectWithRenderFileFullResponse,
-    status_code=status.HTTP_200_OK,
-)
-async def get_project(
-    project_id: int,
-    user_id: AuthUserByAccessTokenDep,
-    project_service: ProjectServiceDep,
-    s3_client: MinioClientDep,
-) -> ProjectWithRenderFileFullResponse:
-    return await project_service.get_by_id(
-        project_id=project_id,
-        user_id=user_id,
-        s3_client=s3_client,
-    )
-
-
-@router.get(
     "/",
     response_model=ProjectResponseList,
     status_code=status.HTTP_200_OK,
@@ -45,8 +30,8 @@ async def get_project(
 async def get_current_user_projects(
     project_service: ProjectServiceDep,
     user_id: AuthUserByAccessTokenDep,
-    size: int = 10,
-    page: int = 1,
+    size: PaginationSizeDep = 10,
+    page: PaginationPageDep = 1,
 ) -> ProjectResponseList:
     return await project_service.get_user_projects(
         user_id=user_id,
@@ -56,15 +41,34 @@ async def get_current_user_projects(
 
 
 @router.get(
+    "/public",
+    response_model=ProjectResponseList,
+    status_code=status.HTTP_200_OK,
+    dependencies=[
+        Depends(get_auth_user_by_access_token),
+    ],
+)
+async def get_public_projects(
+    project_service: ProjectServiceDep,
+    size: PaginationSizeDep = 10,
+    page: PaginationPageDep = 1,
+) -> ProjectResponseList:
+    return await project_service.get_public_projects(size=size, page=page)
+
+
+@router.get(
     "/public/user/{user_id}",
     response_model=ProjectResponseList,
     status_code=status.HTTP_200_OK,
+    dependencies=[
+        Depends(get_auth_user_by_access_token),
+    ],
 )
 async def get_user_public_projects(
     project_service: ProjectServiceDep,
     user_id: int,
-    size: int = 10,
-    page: int = 1,
+    size: PaginationSizeDep = 10,
+    page: PaginationPageDep = 1,
 ) -> ProjectResponseList:
     return await project_service.get_user_public_projects(
         user_id=user_id,
@@ -119,4 +123,22 @@ async def delete_project(
     return await project_service.delete_by_id(
         project_id=project_id,
         user_id=user_id,
+    )
+
+
+@router.get(
+    "/{project_id}",
+    response_model=ProjectWithRenderFileFullResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_project(
+    project_id: int,
+    user_id: AuthUserByAccessTokenDep,
+    project_service: ProjectServiceDep,
+    s3_client: MinioClientDep,
+) -> ProjectWithRenderFileFullResponse:
+    return await project_service.get_by_id(
+        project_id=project_id,
+        user_id=user_id,
+        s3_client=s3_client,
     )

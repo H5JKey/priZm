@@ -121,9 +121,20 @@ class AbstractProjectRepository(AbstractRepository):
         """
 
     @abstractmethod
-    async def get_user_projects(self, user_id: int) -> list[Project]:
+    async def get_user_projects(
+        self,
+        user_id: int,
+        size: int,
+        page: int,
+    ) -> list[Project]:
         """
         Посмотреть список проектов пользователя.
+        """
+
+    @abstractmethod
+    async def get_public_projects(self, size: int, page: int) -> list[Project]:
+        """
+        Посмотреть список публичных проектов.
         """
 
     @abstractmethod

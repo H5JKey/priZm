@@ -1,11 +1,18 @@
 from pydantic import BaseModel
 
 
+class MinioBucketConfig(BaseModel):
+    input: str = "input"
+    output: str = "output"
+
+
 class MinioConfig(BaseModel):
     host: str = "minio"
     port: int = 9000
     username: str = "adminadmin"
     password: str = "adminadmin"
+
+    bucket: MinioBucketConfig = MinioBucketConfig()
 
     @property
     def url(self) -> str:

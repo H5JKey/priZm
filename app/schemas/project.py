@@ -4,6 +4,7 @@ from core.constants import ProjectVisibility, RenderStatus
 from infrastructure.database.models import Project, Render
 from pydantic import BaseModel, ConfigDict
 
+from schemas.constraints.pagination import PageConstraint, SizeConstraint
 from schemas.constraints.project import DescriptionConstraint, NameConstraint
 from schemas.render import (
     RenderCreate,
@@ -142,8 +143,8 @@ class ProjectResponseList(BaseModel):
     """
 
     project_list: list[ProjectResponse]
-    size: int
-    page: int
+    size: SizeConstraint
+    page: PageConstraint
 
 
 class ProjectWithRenderFileResponseList(BaseModel):
@@ -152,5 +153,5 @@ class ProjectWithRenderFileResponseList(BaseModel):
     """
 
     project_list: list[ProjectWithRenderFileResponse]
-    size: int
-    page: int
+    size: SizeConstraint
+    page: PageConstraint

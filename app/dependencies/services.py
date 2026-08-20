@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from aiokafka import AIOKafkaProducer
-from core.constants import s3_bucket
+from core.config.application import settings
 from fastapi import Depends
 from infrastructure.database.unit_of_work import UnitOfWork
 from infrastructure.kafka import producer
@@ -33,7 +33,7 @@ async def get_input_file_uploader(
     ],
 ) -> AsyncGenerator[FileUploader]:
     file_uploader = FileUploader(
-        bucket=s3_bucket.input_bucket,
+        bucket=settings.minio.bucket.input,
         s3_client=s3_client,
         unit_of_work=unit_of_work,
     )
