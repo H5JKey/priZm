@@ -8,14 +8,16 @@ from core.exceptions.project import ProjectIdNotFoundError
 from core.exceptions.user import UserIdNotFoundError
 from core.interfaces.clients import AbstractS3Client, AbstractUnitOfWorkClient
 from core.logging import get_logger
-from infrastructure.database.models import User
-from infrastructure.database.repositories.file import FileRepository
-from infrastructure.database.repositories.outbox import OutboxRepository
-from infrastructure.database.repositories.project import ProjectRepository
-from infrastructure.database.repositories.render import RenderRepository
-from infrastructure.database.repositories.user import UserRepository
-from schemas.event import AddRenderProjectEvent, EventCreate, GenerateRenderEvent
-from schemas.file import FileCreate, FileLocationCreate
+from infrastructure.database.models import Project, User
+from infrastructure.database.repositories import (
+    FileRepository,
+    OutboxRepository,
+    ProjectRepository,
+    RenderRepository,
+    UserRepository,
+)
+from schemas.event import AddRenderProjectEvent, EventCreate
+from schemas.file import FileCreate
 from schemas.project import (
     ProjectPartialUpdate,
     ProjectResponse,
@@ -25,7 +27,6 @@ from schemas.project import (
     ProjectWithRenderFileResponse,
     ProjectWithRenderResponse,
 )
-from schemas.render import RenderResponse, RenderWithFileFullResponse
 
 logger = get_logger(__name__)
 
@@ -61,21 +62,10 @@ class ProjectService:
         user_id: int,
         s3_client: AbstractS3Client,
     ) -> ProjectWithRenderFileFullResponse:
-        project = await self.project_repository.get_by_id(project_id)
-        if project is None:
-            raise ProjectIdNotFoundError(project_id)
-
-        get_owner_coroutine = self.project_repository.get_project_owner(
+        project = await self._validate_access_to_get_project(
             project_id,
+            user_id,
         )
-        owner = cast(User, await get_owner_coroutine)
-        if (
-            project.visibility == ProjectVisibility.private.value
-            and owner.id != user_id
-        ):
-            detail = "You are not allowed to watch this project."
-            raise PermissionDeniedError(detail)
-
         logger.info(
             "Received project, project_id=%s, user_id=%s, render_id=%s, source_file_id=%s, name=%s, status=%s, visibility=%s",  # noqa: E501
             project.id,
@@ -86,28 +76,9 @@ class ProjectService:
             project.status,
             project.visibility,
         )
-        project_response = ProjectResponse.model_validate(project)
-        source_file_url = await s3_client.generate_presigned_url(
-            bucket=project.source_file.bucket,
-            key=project.source_file.key,
-            expires_in=10 * 60,
-            client_method="get_object",
-        )
-
-        render = RenderWithFileFullResponse.model_validate(project.render)
-        if project.render.file is not None:
-            render_file_url = await s3_client.generate_presigned_url(
-                bucket=project.render.file.bucket,
-                key=project.render.file.key,
-                expires_in=10 * 60,
-                client_method="get_object",
-            )
-            render.url = render_file_url.replace("minio", "localhost")
-
-        return ProjectWithRenderFileFullResponse(
-            **project_response.model_dump(),
-            render=render,
-            url=source_file_url.replace("minio", "localhost"),
+        return await ProjectWithRenderFileFullResponse.get_from_database(
+            project,
+            s3_client,
         )
 
     async def get_user_projects(
@@ -227,24 +198,12 @@ class ProjectService:
             render_id=render.id,
             create_project_data=create_project_data,
         )
-        render_response = RenderResponse.model_validate(render)
-        project_response = ProjectResponse.model_validate(project)
-        project_with_render_response = ProjectWithRenderResponse(
-            render=render_response,
-            **project_response.model_dump(),
-        )
-        file_location_create = FileLocationCreate(
-            bucket=file.bucket,
-            key=file.key,
-        )
-        message = GenerateRenderEvent(
-            project_id=project.id,
-            render=create_render_data,
-            file=file_location_create,
-        )
-        event_create_data = EventCreate(
+
+        event_create_data = EventCreate.get_from_database(
+            project=project,
+            render=render,
+            file=file,
             topic=KafkaTopic.create_project,
-            message=message.model_dump(),
         )
 
         await self.outbox_repository.create_event(event_create_data)
@@ -258,7 +217,7 @@ class ProjectService:
             project.status,
             project.visibility,
         )
-        return project_with_render_response
+        return ProjectWithRenderResponse.get_from_database(project, render)
 
     async def partial_update_project(
         self,
@@ -266,20 +225,7 @@ class ProjectService:
         user_id: int,
         partial_update_project_data: ProjectPartialUpdate,
     ) -> ProjectWithRenderFileResponse:
-        project = await self.project_repository.get_by_id(
-            project_id,
-        )
-        if project is None:
-            raise ProjectIdNotFoundError(project_id)
-
-        get_owner_coroutine = self.project_repository.get_project_owner(
-            project_id,
-        )
-        owner = cast(User, await get_owner_coroutine)
-        if owner.id != user_id:
-            detail = "You are not allowed to watch this project."
-            raise PermissionDeniedError(detail)
-
+        await self._validate_access_to_change_project(project_id, user_id)
         project = await self.project_repository.partial_update_project(
             project_id,
             partial_update_project_data,
@@ -301,20 +247,7 @@ class ProjectService:
         project_id: int,
         user_id: int,
     ) -> None:
-        project = await self.project_repository.get_by_id(
-            project_id,
-        )
-        if project is None:
-            raise ProjectIdNotFoundError(project_id)
-
-        get_owner_coroutine = self.project_repository.get_project_owner(
-            project_id,
-        )
-        owner = cast(User, await get_owner_coroutine)
-        if owner.id != user_id:
-            detail = "You are not allowed to watch this project."
-            raise PermissionDeniedError(detail)
-
+        project = await self._validate_access_to_change_project(project_id, user_id)
         await self.project_repository.delete_by_id(project_id)
         logger.info(
             "Deleted project, project_id=%s, user_id=%s, render_id=%s, source_file_id=%s, name=%s, status=%s, visibility=%s",  # noqa: E501
@@ -326,3 +259,41 @@ class ProjectService:
             project.status,
             project.visibility,
         )
+
+    async def _validate_access_to_change_project(
+        self,
+        project_id: int,
+        user_id: int,
+    ) -> Project:
+        project = await self.project_repository.get_by_id(
+            project_id,
+        )
+        if project is None:
+            raise ProjectIdNotFoundError(project_id)
+
+        await self._validate_project_owner(project_id, user_id)
+        return project  # type: ignore[no-any-return]
+
+    async def _validate_access_to_get_project(
+        self,
+        project_id: int,
+        user_id: int,
+    ) -> Project:
+        project = await self.project_repository.get_by_id(
+            project_id,
+        )
+        if project is None:
+            raise ProjectIdNotFoundError(project_id)
+
+        if project.visibility == ProjectVisibility.private:
+            await self._validate_project_owner(project_id, user_id)
+
+        return project  # type: ignore[no-any-return]
+
+    async def _validate_project_owner(self, project_id: int, user_id: int) -> None:
+        get_owner_coroutine = self.project_repository.get_project_owner(
+            project_id,
+        )
+        owner = cast(User, await get_owner_coroutine)
+        if owner.id != user_id:
+            raise PermissionDeniedError

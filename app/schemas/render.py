@@ -29,6 +29,8 @@ class RenderCreate(RenderBase):
     Схема для создания рендера.
     """
 
+    model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
+
 
 class RenderResponse(RenderBase):
     """

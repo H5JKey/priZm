@@ -27,6 +27,7 @@ class FileLocationCreate(BaseModel):
 
     bucket: BucketConstraint
     key: KeyConstraint
+    model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
 
 
 class FileCreate(FileBase, FileLocationCreate):

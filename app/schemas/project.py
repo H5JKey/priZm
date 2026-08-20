@@ -1,6 +1,7 @@
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar, Self
 
 from core.constants import ProjectVisibility, RenderStatus
+from infrastructure.database.models import Project, Render
 from pydantic import BaseModel, ConfigDict
 
 from schemas.constraints.project import DescriptionConstraint, NameConstraint
@@ -10,6 +11,9 @@ from schemas.render import (
     RenderWithFileFullResponse,
     RenderWithFileResponse,
 )
+
+if TYPE_CHECKING:
+    from core.interfaces.clients import AbstractS3Client
 
 
 class ProjectBase(BaseModel):
@@ -76,6 +80,36 @@ class ProjectWithRenderFileFullResponse(ProjectFullResponse):
 
     render: RenderWithFileFullResponse
 
+    @classmethod
+    async def get_from_database(
+        cls,
+        project: Project,
+        s3_client: "AbstractS3Client",
+    ) -> Self:
+        project_response = ProjectResponse.model_validate(project)
+        source_file_url = await s3_client.generate_presigned_url(
+            bucket=project.source_file.bucket,
+            key=project.source_file.key,
+            expires_in=10 * 60,
+            client_method="get_object",
+        )
+
+        render = RenderWithFileFullResponse.model_validate(project.render)
+        if project.render.file is not None:
+            render_file_url = await s3_client.generate_presigned_url(
+                bucket=project.render.file.bucket,
+                key=project.render.file.key,
+                expires_in=10 * 60,
+                client_method="get_object",
+            )
+            render.url = render_file_url.replace("minio", "localhost")
+
+        return cls(
+            **project_response.model_dump(),
+            render=render,
+            url=source_file_url.replace("minio", "localhost"),
+        )
+
 
 class ProjectWithRenderResponse(ProjectResponse):
     """
@@ -83,6 +117,15 @@ class ProjectWithRenderResponse(ProjectResponse):
     """
 
     render: RenderResponse
+
+    @classmethod
+    def get_from_database(cls, project: Project, render: Render) -> Self:
+        render_response = RenderResponse.model_validate(render)
+        project_response = ProjectResponse.model_validate(project)
+        return cls(
+            render=render_response,
+            **project_response.model_dump(),
+        )
 
 
 class ProjectWithRenderFileResponse(ProjectResponse):

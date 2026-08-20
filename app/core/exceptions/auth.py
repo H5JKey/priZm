@@ -17,6 +17,6 @@ class PermissionDeniedError(ForbiddenError):
     Ошибка, связанная с отсутствием прав доступ.
     """
 
-    def __init__(self, access_level: str) -> None:
-        detail = f"Permission denied: access level = {access_level} is not sufficient."
+    def __init__(self) -> None:
+        detail = "Permission denied: access level is not sufficient."
         super().__init__(detail)
