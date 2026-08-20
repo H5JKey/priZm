@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from core.config.database import DataBaseConfig
 from core.config.jwt import JWTConfig
+from core.config.kafka import KafkaConfig
 from core.config.logging import LoggingConfig
 from core.config.minio import MinioConfig
 
@@ -13,8 +14,9 @@ from core.config.minio import MinioConfig
 class Settings(BaseSettings):
     base_dir: Path = Path(__file__).parent.parent.parent
     database: DataBaseConfig = DataBaseConfig()
-    jwt: JWTConfig = JWTConfig()
     minio: MinioConfig = MinioConfig()
+    kafka: KafkaConfig = KafkaConfig()
+    jwt: JWTConfig = JWTConfig()
     logging: LoggingConfig = LoggingConfig()
     oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(
         tokenUrl="/api/v1/auth/login",

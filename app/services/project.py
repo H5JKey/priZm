@@ -1,7 +1,8 @@
 from types import TracebackType
 from typing import Self, cast
 
-from core.constants import KafkaTopic, ProjectVisibility
+from core.config.application import settings
+from core.constants import ProjectVisibility
 from core.exceptions.auth import PermissionDeniedError
 from core.exceptions.file import FileIdNotFoundError
 from core.exceptions.project import ProjectIdNotFoundError
@@ -93,7 +94,20 @@ class ProjectService:
 
         get_projects = self.project_repository.get_user_projects(
             user_id,
+            size,
+            page,
         )
+        projects = [
+            ProjectResponse.model_validate(project) for project in await get_projects
+        ]
+        return ProjectResponseList(
+            project_list=projects,
+            size=size,
+            page=page,
+        )
+
+    async def get_public_projects(self, size: int, page: int) -> ProjectResponseList:
+        get_projects = self.project_repository.get_public_projects(size, page)
         projects = [
             ProjectResponse.model_validate(project) for project in await get_projects
         ]
@@ -203,7 +217,7 @@ class ProjectService:
             project=project,
             render=render,
             file=file,
-            topic=KafkaTopic.create_project,
+            topic=settings.kafka.topic.create_project,
         )
 
         await self.outbox_repository.create_event(event_create_data)

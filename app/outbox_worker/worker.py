@@ -3,7 +3,7 @@ from types import TracebackType
 from typing import Self
 
 from aiokafka import AIOKafkaProducer
-from core.constants import kafka_topic
+from core.config.application import settings
 from core.interfaces.clients import AbstractUnitOfWorkClient
 from core.logging import get_logger
 from infrastructure.database.repositories.outbox import OutboxRepository
@@ -43,13 +43,14 @@ class OutboxWorker:
         logger.info("Received message, message=%s", event.message)
         message = self._serialize_message(event.message)
         await self.outbox_repository.mark_event_as_sent(event.id)
+        topic = settings.kafka.topic.create_project
         await self.producer.send(
-            topic=kafka_topic.create_project,
+            topic=topic,
             value=message,
         )
         logger.info(
             "Sent message, topic=%s, message=%s",
-            kafka_topic.create_project,
+            topic,
             message,
         )
 

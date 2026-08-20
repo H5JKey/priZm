@@ -2,7 +2,6 @@ from json import dumps, loads
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer, ConsumerRecord
 from core.config.application import settings
-from core.constants import kafka_topic
 from core.logging import get_logger
 from pydantic import BaseModel
 from schemas.event import AddRenderProjectEvent
@@ -62,7 +61,7 @@ async def add_render_to_project_consume(consumer: AIOKafkaConsumer) -> None:
 
 
 consumer = AIOKafkaConsumer(
-    kafka_topic.generate_model,
+    settings.kafka.topic.generate_render,
     bootstrap_servers="kafka:9092",
     group_id="app",
     value_deserializer=deserialize_message,

@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from enum import StrEnum
 
 USER_SURNAME_MIN_LENGTH = 3
@@ -24,6 +23,9 @@ PROJECT_NAME_MAX_LENGTH = 30
 PROJECT_DESCRIPTION_MIN_LENGTH = 0
 PROJECT_DESCRIPTION_MAX_LENGTH = 512
 
+PROJECT_PAGINATION_SIZE_MIN_VALUE = 1
+PROJECT_PAGINATION_PAGE_MIN_VALUE = 1
+
 RENDER_WIDTH_MIN_VALUE = 20
 RENDER_WIDTH_MAX_VALUE = 2160
 
@@ -43,6 +45,7 @@ FILE_BUCKET_MAX_LENGTH = 25
 FILE_KEY_MAX_LENGTH = 128
 
 OUTBOX_TOPIC_MAX_LENGTH = 512
+
 
 FIELD_SUB = "sub"
 TOKEN_TYPE = "type"
@@ -65,19 +68,3 @@ class RenderStatus(StrEnum):
 class ProjectVisibility(StrEnum):
     public = "public"
     private = "private"
-
-
-@dataclass(frozen=True)
-class S3Bucket:
-    input_bucket = "input"
-    output_bucket = "output"
-
-
-@dataclass(frozen=True)
-class KafkaTopic:
-    create_project: str = "create_project"
-    generate_model: str = "generate_model"
-
-
-s3_bucket = S3Bucket()
-kafka_topic = KafkaTopic()

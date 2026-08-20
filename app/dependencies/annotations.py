@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Query
 from infrastructure.database.repositories.render import RenderRepository
 from infrastructure.database.unit_of_work import UnitOfWork
 from infrastructure.minio.client import MinioClient
@@ -73,4 +73,18 @@ UnitOfWorkDep = Annotated[
 MinioClientDep = Annotated[
     MinioClient,
     Depends(get_minio_client),
+]
+
+PaginationSizeDep = Annotated[
+    int,
+    Query(
+        ge=1,
+    ),
+]
+
+PaginationPageDep = Annotated[
+    int,
+    Query(
+        ge=1,
+    ),
 ]
