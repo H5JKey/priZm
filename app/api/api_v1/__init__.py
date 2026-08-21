@@ -2,10 +2,11 @@ __all__ = ("router",)
 
 from fastapi import APIRouter
 
+from api.api_v1.projects import router as project_router
+
 from .auth import router as auth_router
-from .project import router as project_router
 from .upload_file import router as upload_file_router
-from .user import router as user_router
+from .users import router as user_router
 
 router = APIRouter(
     prefix="/v1",

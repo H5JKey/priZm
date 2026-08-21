@@ -62,6 +62,7 @@ class ProjectResponse(ProjectBase):
 
     visibility: ProjectVisibility
     status: RenderStatus
+    user_id: int
     render_id: int | None
     id: int
 
