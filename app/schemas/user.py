@@ -29,6 +29,7 @@ class UserCreate(UserBase):
     Схема для создания пользователя.
     """
 
+    email: EmailConstraint
     encrypted_password: EncryptedPasswordConstraint
 
 
