@@ -138,12 +138,32 @@ async function register(surname, name, username, email, password) {
     return data;
 }
 
-// Логин
-async function login(email, password) {
-    const data = await apiRequest('/auth/login', {
+// ===== ЛОГИН =====
+async function login(username, password) {
+    const formData = new URLSearchParams();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        body: JSON.stringify({ email, password })
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
     });
+
+    if (!response.ok) {
+        let errorMessage = 'Ошибка входа';
+        try {
+            const error = await response.json();
+            errorMessage = error.detail || errorMessage;
+        } catch (e) {
+            errorMessage = `Ошибка ${response.status}`;
+        }
+        throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
 
     if (data.access_token) {
         setTokens(data.access_token, data.refresh_token);
@@ -552,17 +572,17 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
 
             try {
                 errorDiv.style.display = 'none';
-                await login(email, password);
+                await login(username, password);
                 window.location.href = 'index.html';
             } catch (error) {
                 errorDiv.style.display = 'block';
-                errorDiv.textContent = error.message || 'Неверный email или пароль';
+                errorDiv.textContent = error.message || 'Неверный username или пароль';
             }
         });
     }
