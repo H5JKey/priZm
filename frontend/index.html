@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная — 3D Render</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- ===== ШАПКА ===== -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-cube"></i>
+                    <span>3D Render</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="active"><i class="fas fa-home"></i> Главная</a>
+                    <a href="create.html"><i class="fas fa-plus-circle"></i> Создать</a>
+                    <a href="profile.html" id="profileLink"><i class="fas fa-user"></i> Профиль</a>
+                    <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
+    <main class="main">
+        <div class="container">
+            <!-- Заголовок -->
+            <div class="page-header">
+                <h1><i class="fas fa-project-diagram"></i> Проекты</h1>
+                <p class="subtitle">Исследуйте 3D-проекты сообщества</p>
+            </div>
+
+            <!-- Список проектов -->
+            <div id="projectsContainer">
+                <div id="loading" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Загрузка...
+                </div>
+                <div id="projectsGrid" class="projects-grid"></div>
+            </div>
+
+            <!-- Пагинация -->
+            <div class="pagination" id="pagination">
+                <button id="prevPage" class="btn btn-secondary" disabled>
+                    <i class="fas fa-chevron-left"></i> Назад
+                </button>
+                <button id="nextPage" class="btn btn-secondary">
+                    Вперед <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
