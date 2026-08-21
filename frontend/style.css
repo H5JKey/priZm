@@ -1,0 +1,657 @@
+/* ===== КАРТОЧКИ ПРОЕКТОВ ===== */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.project-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.project-thumbnail {
+    position: relative;
+    height: 200px;
+    background: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumbnail-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #999;
+    font-size: 48px;
+}
+
+.thumbnail-placeholder span {
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.badge-private,
+.badge-public {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: white;
+}
+
+.badge-private {
+    background: #e74c3c;
+}
+
+.badge-public {
+    background: #2ecc71;
+}
+
+.project-info {
+    padding: 16px;
+}
+
+.project-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+}
+
+.project-description {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.project-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #888;
+}
+
+.project-meta i {
+    margin-right: 4px;
+}
+
+/* ===== ПАГИНАЦИЯ ===== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 32px;
+    padding: 20px 0;
+}
+
+/* ===== ДЕТАЛИ ПРОЕКТА ===== */
+.project-detail-content {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.project-detail-header {
+    border-bottom: 1px solid #e8ecf1;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+.project-detail-header h1 {
+    margin: 0 0 12px 0;
+    font-size: 28px;
+}
+
+.project-detail-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.project-detail-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+}
+
+@media (max-width: 768px) {
+    .project-detail-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+.project-description {
+    margin-bottom: 24px;
+}
+
+.project-files {
+    margin: 24px 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.file-item i {
+    font-size: 20px;
+    color: #4a6cf7;
+}
+
+.file-item .btn {
+    margin-left: auto;
+}
+
+.render-preview {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.render-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.no-render {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.no-render i {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+/* ===== АВТОР ===== */
+.author-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.author-card:hover {
+    background: #e8ecf1;
+}
+
+.author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #888;
+}
+
+.author-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.click-hint {
+    display: block;
+    font-size: 12px;
+    color: #4a6cf7;
+    margin-top: 4px;
+}
+
+/* ===== ПРОФИЛЬ ===== */
+.profile-header {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    color: #888;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h1 {
+    margin: 0 0 8px 0;
+}
+
+.profile-email {
+    color: #666;
+    margin: 4px 0;
+}
+
+.profile-bio {
+    color: #444;
+    margin: 8px 0;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 12px;
+    color: #666;
+    font-size: 14px;
+}
+
+.profile-actions {
+    margin-left: auto;
+}
+
+/* ===== ФОРМА СОЗДАНИЯ ===== */
+.create-form {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #4a6cf7;
+}
+
+.render-settings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.setting-item label {
+    font-weight: normal;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.radio-group {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.radio-label {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 150px;
+}
+
+.radio-label:hover {
+    border-color: #4a6cf7;
+}
+
+.radio-label input[type="radio"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.radio-label:has(input:checked) {
+    border-color: #4a6cf7;
+    background: #f0f3ff;
+}
+
+.radio-label small {
+    color: #888;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* ===== КНОПКИ ===== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #4a6cf7;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3a5cd5;
+}
+
+.btn-secondary {
+    background: #e8ecf1;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d5d9e0;
+}
+
+.btn-success {
+    background: #2ecc71;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #27ae60;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-block {
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-large {
+    padding: 14px 32px;
+    font-size: 16px;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-logout {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* ===== СОСТОЯНИЯ ===== */
+.loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+}
+
+.loading i {
+    font-size: 32px;
+    margin-right: 12px;
+}
+
+.error-message {
+    background: #fee;
+    color: #c0392b;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #fcc;
+    margin: 16px 0;
+}
+
+.success-message {
+    background: #efe;
+    color: #27ae60;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #cfc;
+    margin: 16px 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #888;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+/* ===== АВТОРИЗАЦИЯ ===== */
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.auth-header i {
+    font-size: 48px;
+    color: #4a6cf7;
+}
+
+.auth-header h1 {
+    margin: 12px 0 4px 0;
+}
+
+.auth-header p {
+    color: #888;
+}
+
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form .form-group label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+}
+
+.auth-footer a {
+    font-weight: 600;
+}
+
+.back-btn {
+    margin-bottom: 20px;
+}
+
+/* ===== ОБЩИЕ УТИЛИТЫ ===== */
+.page-header {
+    margin: 32px 0 24px 0;
+}
+
+.page-header h1 {
+    font-size: 32px;
+    margin: 0;
+}
+
+.subtitle {
+    color: #888;
+    margin: 4px 0 0 0;
+}
+
+.helper-text {
+    display: block;
+    color: #888;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* ===== ФОРМА РЕГИСТРАЦИИ ===== */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 480px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.half {
+    flex: 1;
+}
+
+.profile-name {
+    color: #666;
+    font-size: 16px;
+    margin: 4px 0;
+}
+
+/* ===== СТАТУСЫ ПРОЕКТА ===== */
+.project-status-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+.status-pending {
+    background: #f39c12;
+}
+
+.status-processing {
+    background: #3498db;
+}
+
+.status-completed {
+    background: #2ecc71;
+}
+
+.status-failed {
+    background: #e74c3c;
+}
+
+.project-id {
+    color: #999;
+    font-size: 12px;
+}
