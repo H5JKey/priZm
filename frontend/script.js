@@ -158,6 +158,34 @@ function logout() {
     window.location.href = 'login.html';
 }
 
+// ===== ПОЛЬЗОВАТЕЛЬ =====
+async function getCurrentUserProfile() {
+    return await apiRequest('/users/about-me');
+}
+
+async function updateCurrentUserProfile(surname, name, username, email) {
+    return await apiRequest('/users/about-me', {
+        method: 'PUT',
+        body: JSON.stringify({
+            surname,
+            name,
+            username,
+            email
+        })
+    });
+}
+
+async function deleteCurrentUserProfile() {
+    return await apiRequest('/users/about-me', {
+        method: 'DELETE'
+    });
+}
+
+// ===== МОИ ПРОЕКТЫ =====
+async function getMyProjects(page = 1, size = 10) {
+    return await apiRequest(`/users/me/projects?page=${page}&size=${size}`);
+}
+
 // ===== ПРОЕКТЫ =====
 async function getProjects(page = 1, size = 10) {
     return await apiRequest(`/projects/?page=${page}&size=${size}`);
@@ -365,22 +393,66 @@ function updatePagination(current, total) {
     }
 }
 
+// ===== НАСТРОЙКА ДРОПДАУНА =====
+function setupDropdown() {
+    const avatarBtn = document.getElementById('avatarBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (avatarBtn && dropdownMenu) {
+        // Клик по аватарке
+        avatarBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        // Закрытие при клике вне меню
+        document.addEventListener('click', function(e) {
+            if (!dropdownMenu.contains(e.target) && e.target !== avatarBtn) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+
+        // Закрытие при клике на пункт меню
+        dropdownMenu.querySelectorAll('.dropdown-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                dropdownMenu.classList.remove('show');
+            });
+        });
+    }
+}
+
+// ===== ОТКРЫТИЕ МЕНЮ АВАТАРКИ =====
+function toggleMenu() {
+    const menu = document.getElementById('dropdownMenu');
+    if (menu) {
+        menu.classList.toggle('show');
+        console.log('Меню переключено:', menu.classList.contains('show'));
+    }
+}
+
 // ===== ИНИЦИАЛИЗАЦИЯ =====
 document.addEventListener('DOMContentLoaded', () => {
     const publicPages = ['login.html', 'register.html'];
     const currentPage = window.location.pathname.split('/').pop();
 
+    console.log(`🔵 Текущая страница: ${currentPage || 'index'}`);
+
     // Проверка авторизации
     if (!isAuthenticated() && !publicPages.includes(currentPage)) {
+        console.log('🔴 Не авторизован, редирект на логин');
         window.location.href = 'login.html';
         return;
     }
 
     // Если авторизованы и на странице логина/регистрации - редирект
     if (isAuthenticated() && publicPages.includes(currentPage)) {
+        console.log('🟢 Авторизован, редирект на главную');
         window.location.href = 'index.html';
         return;
     }
+
+    // Настройка дропдауна
+    setupDropdown();
 
     // Кнопка выхода
     const logoutBtn = document.getElementById('logoutBtn');
@@ -388,9 +460,48 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', logout);
     }
 
-    // Загрузка проектов на главной
+    // ===== ЗАГРУЗКА ПРОЕКТОВ НА ГЛАВНОЙ =====
     if (currentPage === '' || currentPage === 'index.html') {
-        loadProjects();
+        console.log('🏠 Загрузка главной страницы');
+        loadProjects(1);
+    }
+
+    // ===== ЗАГРУЗКА ПРОФИЛЯ =====
+    if (currentPage === 'profile.html') {
+        console.log('👤 Загрузка профиля');
+        loadProfile();
+    }
+
+    // ===== АВАТАРКА И ДРОПДАУН =====
+    const avatarBtn = document.getElementById('avatarBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (avatarBtn && dropdownMenu) {
+        avatarBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdownMenu.contains(e.target) && e.target !== avatarBtn) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+
+        dropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+                dropdownMenu.classList.remove('show');
+            });
+        });
+    }
+
+    // ===== КНОПКА "МОИ ПРОЕКТЫ" =====
+    const myProjectsBtn = document.getElementById('myProjectsBtn');
+    if (myProjectsBtn) {
+        myProjectsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'profile.html?tab=projects';
+        });
     }
 
     // ===== ОБРАБОТЧИК РЕГИСТРАЦИИ =====
@@ -407,7 +518,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const confirmPassword = document.getElementById('confirmPassword').value;
             const errorDiv = document.getElementById('registerError');
 
-            // Валидация
             if (password !== confirmPassword) {
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = 'Пароли не совпадают';
@@ -424,11 +534,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorDiv.style.display = 'none';
                 const result = await register(surname, name, username, email, password);
 
-                // После успешной регистрации и получения токена
                 if (result.access_token) {
                     window.location.href = 'index.html';
                 } else {
-                    // Если токен не пришел, но регистрация успешна - идем на логин
                     window.location.href = 'login.html?registered=true';
                 }
             } catch (error) {
@@ -474,7 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const resolution = document.getElementById('resolution').value;
             const background = document.getElementById('background').value;
 
-            // Валидация
             if (!file) {
                 const errorDiv = document.getElementById('createError');
                 errorDiv.style.display = 'block';
@@ -517,13 +624,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (projectId) {
             loadProjectDetail(projectId);
         }
-    }
-
-    // ===== ЗАГРУЗКА ПРОФИЛЯ =====
-    if (currentPage === 'profile.html') {
-        const params = new URLSearchParams(window.location.search);
-        const userId = params.get('id');
-        loadProfile(userId);
     }
 });
 
@@ -629,71 +729,169 @@ async function loadProjectDetail(projectId) {
 }
 
 // ===== ЗАГРУЗКА ПРОФИЛЯ =====
-async function loadProfile(userId) {
+async function loadProfile() {
     const container = document.getElementById('profileContent');
     if (!container) return;
 
     try {
         showLoading('profileContent');
-        const user = userId ? await getUserProfile(userId) : await getCurrentUser();
-        const projects = userId ? await getUserProjects(userId) : await getUserProjects(user.id);
+        const user = await getCurrentUserProfile();
+        console.log('👤 Профиль пользователя:', user);
 
         container.innerHTML = `
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    ${user.avatar ? 
-                        `<img src="${user.avatar}" alt="${user.username}">` :
-                        `<i class="fas fa-user-circle"></i>`
-                    }
-                </div>
-                <div class="profile-info">
-                    <h1>${user.username}</h1>
-                    <p class="profile-name">${user.name} ${user.surname}</p>
-                    <p class="profile-email"><i class="fas fa-envelope"></i> ${user.email}</p>
-                    <p class="profile-bio">${user.bio || 'Пользователь 3D Render'}</p>
-                    <div class="profile-stats">
-                        <span><i class="fas fa-project-diagram"></i> ${projects.length} проектов</span>
-                        <span><i class="fas fa-calendar"></i> С нами с ${new Date(user.created_at).toLocaleDateString('ru-RU')}</span>
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar-large">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h1>${user.username}</h1>
+                        <p class="profile-name">${user.name} ${user.surname}</p>
+                        <p class="profile-email"><i class="fas fa-envelope"></i> ${user.email}</p>
+                        <p class="profile-date">
+                            <i class="fas fa-calendar"></i> 
+                            Зарегистрирован: ${new Date(user.registration_date).toLocaleDateString('ru-RU')}
+                        </p>
                     </div>
                 </div>
-                ${!userId ? `
-                    <div class="profile-actions">
-                        <button class="btn btn-secondary" onclick="editProfile()">
-                            <i class="fas fa-edit"></i> Редактировать
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
 
-            <div class="profile-projects">
-                <h2>📦 Проекты пользователя</h2>
-                ${projects.length > 0 ? `
-                    <div class="projects-grid">
-                        ${projects.map(p => renderProjectCard(p)).join('')}
-                    </div>
-                ` : `
-                    <div class="empty-state">
-                        <i class="fas fa-box-open"></i>
-                        <p>У пользователя нет проектов</p>
-                    </div>
-                `}
+                <div class="profile-actions">
+                    <button class="btn btn-primary" onclick="editProfile()">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteAccount()">
+                        <i class="fas fa-trash"></i> Удалить аккаунт
+                    </button>
+                </div>
+
+                <!-- Форма редактирования (скрыта по умолчанию) -->
+                <div id="editForm" style="display:none;" class="edit-form">
+                    <h3>Редактировать профиль</h3>
+                    <form id="updateProfileForm">
+                        <div class="form-group">
+                            <label>Фамилия</label>
+                            <input type="text" id="editSurname" value="${user.surname}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Имя</label>
+                            <input type="text" id="editName" value="${user.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Имя пользователя</label>
+                            <input type="text" id="editUsername" value="${user.username}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="editEmail" value="${user.email}" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Сохранить
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
+                                <i class="fas fa-times"></i> Отмена
+                            </button>
+                        </div>
+                    </form>
+                    <div id="updateError" class="error-message" style="display:none;"></div>
+                    <div id="updateSuccess" class="success-message" style="display:none;"></div>
+                </div>
             </div>
         `;
 
-        document.querySelectorAll('.project-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const id = card.dataset.id;
-                window.location.href = `project.html?id=${id}`;
+        // Обработчик обновления профиля
+        const updateForm = document.getElementById('updateProfileForm');
+        if (updateForm) {
+            updateForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const surname = document.getElementById('editSurname').value;
+                const name = document.getElementById('editName').value;
+                const username = document.getElementById('editUsername').value;
+                const email = document.getElementById('editEmail').value;
+
+                const errorDiv = document.getElementById('updateError');
+                const successDiv = document.getElementById('updateSuccess');
+
+                try {
+                    errorDiv.style.display = 'none';
+                    successDiv.style.display = 'none';
+
+                    await updateCurrentUserProfile(surname, name, username, email);
+
+                    successDiv.style.display = 'block';
+                    successDiv.textContent = '✅ Профиль обновлен!';
+
+                    setTimeout(() => {
+                        loadProfile();
+                    }, 1500);
+                } catch (error) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = error.message;
+                }
             });
-        });
+        }
+
+        // Добавляем обработчики для дропдауна
+        setupDropdownHandlers();
 
     } catch (error) {
+        console.error('❌ Ошибка загрузки профиля:', error);
         container.innerHTML = `
             <div class="error-message">
                 <i class="fas fa-exclamation-circle"></i>
                 <p>Ошибка загрузки профиля: ${error.message}</p>
+                <button onclick="loadProfile()" class="btn btn-secondary">
+                    <i class="fas fa-redo"></i> Повторить
+                </button>
             </div>
         `;
+    }
+}
+
+// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+function setupDropdownHandlers() {
+    const avatarBtn = document.getElementById('avatarBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (avatarBtn && dropdownMenu) {
+        avatarBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdownMenu.contains(e.target) && e.target !== avatarBtn) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    }
+}
+
+function editProfile() {
+    const form = document.getElementById('editForm');
+    if (form) {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+function cancelEdit() {
+    const form = document.getElementById('editForm');
+    if (form) {
+        form.style.display = 'none';
+    }
+}
+
+async function deleteAccount() {
+    if (!confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')) {
+        return;
+    }
+
+    try {
+        await deleteCurrentUserProfile();
+        alert('Аккаунт удален');
+        logout();
+    } catch (error) {
+        alert('Ошибка удаления: ' + error.message);
     }
 }
 

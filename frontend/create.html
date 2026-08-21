@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать проект — 3D Render</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- ===== ШАПКА ===== -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-cube"></i>
+                    <span>3D Render</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html"><i class="fas fa-home"></i> Главная</a>
+                    <a href="create.html" class="active"><i class="fas fa-plus-circle"></i> Создать</a>
+
+                    <!-- Аватарка с выпадающим меню -->
+                    <div class="avatar-dropdown">
+                        <button class="avatar-btn" id="avatarBtn">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="fas fa-user"></i> Мой профиль
+                            </a>
+                            <a href="#" class="dropdown-item" id="myProjectsBtn">
+                                <i class="fas fa-project-diagram"></i> Мои проекты
+                            </a>
+                            <hr class="dropdown-divider">
+                            <button class="dropdown-item dropdown-danger" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Выйти
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
+    <main class="main">
+        <div class="container">
+            <div class="page-header">
+                <h1><i class="fas fa-plus-circle"></i> Создать новый проект</h1>
+                <p class="subtitle">Загрузите GLB-файл и настройте параметры</p>
+            </div>
+
+            <form id="createProjectForm" class="create-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="projectName"><i class="fas fa-tag"></i> Название проекта *</label>
+                    <input type="text" id="projectName" placeholder="Введите название" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectDescription"><i class="fas fa-align-left"></i> Описание</label>
+                    <textarea id="projectDescription" rows="4" placeholder="Опишите ваш проект"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="glbFile"><i class="fas fa-file-archive"></i> GLB-файл *</label>
+                    <input type="file" id="glbFile" accept=".glb" required>
+                    <small class="helper-text">Поддерживаются файлы .glb до 50 МБ</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="renderSettings"><i class="fas fa-sliders-h"></i> Настройки рендера</label>
+                    <div class="render-settings">
+                        <div class="setting-item">
+                            <label for="quality">Качество</label>
+                            <select id="quality">
+                                <option value="low">Низкое</option>
+                                <option value="medium" selected>Среднее</option>
+                                <option value="high">Высокое</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="resolution">Разрешение</label>
+                            <select id="resolution">
+                                <option value="512">512x512</option>
+                                <option value="1024" selected>1024x1024</option>
+                                <option value="2048">2048x2048</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="background">Фон</label>
+                            <select id="background">
+                                <option value="white">Белый</option>
+                                <option value="black" selected>Черный</option>
+                                <option value="transparent">Прозрачный</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Доступ</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="visibility" value="public" checked>
+                            <i class="fas fa-globe"></i> Публичный
+                            <small>Все пользователи увидят проект</small>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="visibility" value="private">
+                            <i class="fas fa-lock"></i> Приватный
+                            <small>Только вы сможете видеть проект</small>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-large">
+                    <i class="fas fa-upload"></i> Создать проект
+                </button>
+            </form>
+
+            <div id="createError" class="error-message" style="display:none;"></div>
+            <div id="createSuccess" class="success-message" style="display:none;"></div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
