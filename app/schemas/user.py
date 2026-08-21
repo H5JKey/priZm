@@ -20,7 +20,6 @@ class UserBase(BaseModel):
     surname: SurnameConstraint
     name: NameConstraint
     username: UsernameConstraint
-    email: EmailConstraint
 
     model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
 
@@ -41,8 +40,17 @@ class UserUpdate(UserBase):
 
 class UserResponse(UserBase):
     """
-    Схема для вывода информации о пользователе.
+    Схема для вывода информации о пользователе,
+    которая будет видна другим пользователям.
     """
 
     id: int
     registration_date: datetime
+
+
+class UserFullResponse(UserResponse):
+    """
+    Схема для вывода информации о пользователе.
+    """
+
+    email: EmailConstraint

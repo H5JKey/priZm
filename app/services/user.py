@@ -5,7 +5,7 @@ from core.interfaces.clients import AbstractUnitOfWorkClient
 from core.logging import get_logger
 from infrastructure.database.models import User
 from infrastructure.database.repositories.user import UserRepository
-from schemas.user import UserResponse, UserUpdate
+from schemas.user import UserFullResponse, UserResponse, UserUpdate
 
 logger = get_logger(__name__)
 
@@ -19,6 +19,10 @@ class UserService:
         self.user_repository = self.unit_of_work.get_repository(UserRepository)
 
     async def get_by_id(self, user_id: int) -> UserResponse:
+        user_full_response = await self.get_profile_by_id(user_id)
+        return UserResponse.model_validate(user_full_response)
+
+    async def get_profile_by_id(self, user_id: int) -> UserFullResponse:
         user = await self.user_repository.get_by_id(user_id)
         if user is None:
             raise UserIdNotFoundError(user_id)
@@ -28,7 +32,7 @@ class UserService:
             user_id,
             user.username,
         )
-        return UserResponse.model_validate(user)
+        return UserFullResponse.model_validate(user)
 
     async def update_user(
         self,
