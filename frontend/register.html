@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация — 3D Render</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <i class="fas fa-cube"></i>
+                <h1>Создать аккаунт</h1>
+                <p>Присоединяйтесь к сообществу</p>
+            </div>
+
+            <form id="registerForm" class="auth-form">
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label for="surname"><i class="fas fa-user"></i> Фамилия</label>
+                        <input type="text" id="surname" placeholder="Иванов" required>
+                    </div>
+                    <div class="form-group half">
+                        <label for="name"><i class="fas fa-user"></i> Имя</label>
+                        <input type="text" id="name" placeholder="Иван" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="username"><i class="fas fa-at"></i> Имя пользователя</label>
+                    <input type="text" id="username" placeholder="ivan_ivanov" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="email" placeholder="example@mail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Пароль</label>
+                    <input type="password" id="password" placeholder="Минимум 6 символов" required minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword"><i class="fas fa-check-circle"></i> Подтвердите пароль</label>
+                    <input type="password" id="confirmPassword" placeholder="Повторите пароль" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-user-plus"></i> Зарегистрироваться
+                </button>
+
+                <div class="auth-footer">
+                    <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
+                </div>
+            </form>
+
+            <div id="registerError" class="error-message" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
