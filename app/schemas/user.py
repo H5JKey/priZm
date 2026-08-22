@@ -37,7 +37,9 @@ class UserUpdate(UserBase):
     """
     Схема для обновления данных о пользователе.
     """
+
     email: EmailConstraint
+
 
 class UserResponse(UserBase):
     """

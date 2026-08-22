@@ -56,5 +56,30 @@
     </main>
 
     <script src="script.js"></script>
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ УДАЛЕНИЯ ПРОЕКТА ===== -->
+    <div id="deleteProjectModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i> Удаление проекта</h2>
+                <button class="modal-close" onclick="closeDeleteProjectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Вы действительно хотите удалить этот проект?</strong></p>
+                <p style="color: #e74c3c; font-size: 14px;">Это действие необратимо. Все данные проекта будут удалены навсегда.</p>
+                <div class="modal-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Для подтверждения введите название проекта: <strong id="modalProjectNameDisplay"></strong></span>
+                </div>
+                <input type="text" id="modalProjectConfirmInput" placeholder="Введите название проекта" class="modal-input">
+                <div id="modalProjectError" class="error-message" style="display:none; margin-top: 12px;">Название не совпадает</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteProjectModal()">Отмена</button>
+                <button class="btn btn-danger" id="modalConfirmDeleteProject" disabled>
+                    <i class="fas fa-trash"></i> Удалить навсегда
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

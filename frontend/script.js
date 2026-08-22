@@ -337,24 +337,7 @@ async function deleteProject(projectId) {
     return null;
 }
 
-// ===== ОБРАБОТЧИК УДАЛЕНИЯ ПРОЕКТА =====
-async function deleteProjectHandler(projectId) {
-    if (!confirm('⚠️ Вы уверены, что хотите удалить этот проект? Это действие необратимо!')) {
-        return;
-    }
 
-    if (!confirm('Еще раз: ВСЕ ДАННЫЕ ПРОЕКТА БУДУТ УДАЛЕНЫ. Продолжить?')) {
-        return;
-    }
-
-    try {
-        await deleteProject(projectId);
-        alert('✅ Проект успешно удален');
-        window.location.href = 'index.html';
-    } catch (error) {
-        alert('❌ Ошибка удаления: ' + error.message);
-    }
-}
 
 async function createProject(formData) {
     const token = getAccessToken();
@@ -627,6 +610,94 @@ async function uploadFile(file) {
 
     return await response.json();
 }
+
+// ===== УДАЛЕНИЕ ПРОЕКТА С МОДАЛЬНЫМ ОКНОМ =====
+let projectToDelete = null;
+
+function deleteProjectHandler(projectId) {
+    // Сохраняем ID проекта для удаления
+    projectToDelete = projectId;
+
+    // Показываем модальное окно
+    const modal = document.getElementById('deleteProjectModal');
+    const nameDisplay = document.getElementById('modalProjectNameDisplay');
+    const confirmInput = document.getElementById('modalProjectConfirmInput');
+    const confirmBtn = document.getElementById('modalConfirmDeleteProject');
+    const errorDiv = document.getElementById('modalProjectError');
+
+    // Получаем название проекта
+    getProject(projectId).then(project => {
+        if (project && project.name) {
+            nameDisplay.textContent = project.name;
+        }
+    }).catch(() => {
+        nameDisplay.textContent = 'проект';
+    });
+
+    // Сбрасываем состояние
+    confirmInput.value = '';
+    errorDiv.style.display = 'none';
+    confirmBtn.disabled = true;
+    modal.style.display = 'flex';
+
+    // Слушаем ввод
+    confirmInput.oninput = function() {
+        const projectName = nameDisplay.textContent;
+        if (this.value === projectName) {
+            errorDiv.style.display = 'none';
+            confirmBtn.disabled = false;
+        } else {
+            errorDiv.style.display = 'block';
+            confirmBtn.disabled = true;
+        }
+    };
+
+    // Подтверждение удаления
+    confirmBtn.onclick = async function() {
+        const projectName = nameDisplay.textContent;
+        if (confirmInput.value === projectName) {
+            try {
+                await deleteProject(projectToDelete);
+
+                // Закрываем модалку
+                closeDeleteProjectModal();
+
+                // Редирект на главную
+                window.location.href = 'index.html';
+
+            } catch (error) {
+                const errorDiv = document.getElementById('modalProjectError');
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Ошибка удаления: ' + error.message;
+                errorDiv.style.color = '#e74c3c';
+            }
+        }
+    };
+}
+
+// ===== ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА УДАЛЕНИЯ ПРОЕКТА =====
+function closeDeleteProjectModal() {
+    const modal = document.getElementById('deleteProjectModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    projectToDelete = null;
+}
+
+// Закрытие по клику вне окна
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('deleteProjectModal');
+    if (e.target === modal) {
+        closeDeleteProjectModal();
+    }
+});
+
+// Закрытие по Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDeleteProjectModal();
+    }
+});
 
 // ===== ОТКРЫТИЕ МЕНЮ АВАТАРКИ =====
 function toggleMenu() {
