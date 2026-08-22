@@ -5,7 +5,7 @@ from schemas.file import FileResponse
 
 router = APIRouter(
     tags=["Upload File"],
-    prefix="/file",
+    prefix="/files",
     dependencies=[Depends(get_auth_user_by_access_token)],
 )
 
