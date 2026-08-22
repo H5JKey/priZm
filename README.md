@@ -16,7 +16,7 @@ PriZm is an open-source rendering platform that combines a physically based path
 
 ```text
 priZm/
-├── app/                 # Python-based server infrastructure
+├── app/                     # Python-based server infrastructure
 │   ├── api/                 # REST API endpoints
 │   ├── core/                # Core application logic
 │   ├── dependencies/        
@@ -25,13 +25,15 @@ priZm/
 │   ├── schemas/             # Data validation schemas
 │   └── services/            # Business logic services
 │
-└── renderer/                # C++ path tracing engine
-    ├── include/             # Public headers
-    ├── src/                 # Implementation source files
-    ├── shaders/             # OpenGL shader programs sources
-    ├── lib/                 # Third-party dependencies
-    ├── tests/               # Unit and integration tests
-    └── images/              # Example output renders
+├── renderer/                # C++ path tracing engine
+│   ├── include/             # Public headers
+│   ├── src/                 # Implementation source files
+│   ├── shaders/             # OpenGL shader programs sources
+│   ├── lib/                 # Third-party dependencies
+│   ├── tests/               # Unit and integration tests
+│   └── images/              # Example output renders
+│
+└── frontend/               
 ```
 
 ---
