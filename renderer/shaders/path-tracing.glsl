@@ -20,6 +20,12 @@ struct Node {
     int count;
 };
 
+struct Sun {
+    vec3 direction;
+    vec3 color;
+    float exponent;
+};
+
 layout(rgba32f, binding = 0) uniform image2D outputImage;
 
 layout(std430, binding = 1) buffer vertexBuffer {
@@ -58,6 +64,7 @@ uniform vec3 uLookAt;
 uniform vec3 uBackgroundColor;
 uniform uint uSeed;
 uniform uint uFrameIndex;
+uniform Sun uSun;
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
@@ -314,7 +321,7 @@ vec3 traceRay(vec3 origin, vec3 direction, uint seed) {
         else
             hit.distance = MAX_DIST;
         if (hit.distance > MAX_DIST - 1) {
-            return throughput * (uBackgroundColor + vec3(0.0, 0.0, 0.0) * pow(max(0.0, dot(direction, normalize(vec3(-1,1,1)))), 256.0));
+            return throughput * (uBackgroundColor + uSun.color * pow(max(0.0, dot(direction, uSun.direction)), uSun.exponent));
         }
         Material material = materials[hit.material_id];
         if (length(material.emission.rgb) > 0.01) {

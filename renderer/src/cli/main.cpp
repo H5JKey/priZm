@@ -17,18 +17,19 @@ void printHelp(std::string_view programName) {
     std::println("Usage:");
     std::println(" {} <width> <height> <samples> <input_scene> [OPTIONS]\n", programName);
     std::println("Arguments:");
-    std::println("  width:         Output image width");
-    std::println("  height:        Output image height");
-    std::println("  samples:       Path tracer samples");
-    std::println("  input_scene:   Path to 3D scene file (only .glb, .gltf supported)");
+    std::println("  width:             Output image width");
+    std::println("  height:            Output image height");
+    std::println("  samples:           Path tracer samples");
+    std::println("  input_scene:       Path to 3D scene file (only .glb, .gltf supported)");
     std::println("Options:");
-    std::println(" -h, --help      Shows this help message");
-    std::println(" -o, --output    Output image path (default: output.png)");
-    std::println(" -v, --verbose   Print detailed logs");
-    std::println(" -d, --debug     Output debug images: raw, albedo, normals");
-    std::println(" -p, --plane     Add plane to scene");
-    std::println(" -c, --camera    Set camera properties");
+    std::println(" -h, --help          Shows this help message");
+    std::println(" -o, --output        Output image path (default: output.png)");
+    std::println(" -v, --verbose       Print detailed logs");
+    std::println(" -d, --debug         Output debug images: raw, albedo, normals");
+    std::println(" -p, --plane         Add plane to scene");
+    std::println(" -c, --camera        Set camera properties");
     std::println(" -B, --background    Set background color (default: vec3(0,0,0))");
+    std::println(" -S, --sun           Set sun properties");
 }
 
 void printUsage(std::string_view programName) {
@@ -71,6 +72,8 @@ int main(int argc, char* argv[]) {
     float planeSize = 0;
     Scene::Camera userCamera;
     bool cameraSet = false;
+    bool sunSet = false;
+    Scene::Sun sun;
 
     for (int i = 5; i < argc; i++) {
         std::string arg = argv[i];
@@ -113,6 +116,26 @@ int main(int argc, char* argv[]) {
                 std::println(std::cerr, "Error: {} requires 7 numbers <origin:vec3> <lookAt:vec3> <fov:float>", arg);
                 return EXIT_FAILURE;
             }
+        } else if (arg == "-S" || arg == "--sun") {
+            if (i + 7 >= argc) {
+                std::println(std::cerr, "Error: {} requires 7 numbers <color:vec3> <direction:vec3> <exponent:float>",
+                             arg);
+                return EXIT_FAILURE;
+            }
+            try {
+                sunSet = true;
+                sun.color.x = std::stof(argv[++i]);
+                sun.color.y = std::stof(argv[++i]);
+                sun.color.z = std::stof(argv[++i]);
+                sun.direction.x = std::stof(argv[++i]);
+                sun.direction.y = std::stof(argv[++i]);
+                sun.direction.z = std::stof(argv[++i]);
+                sun.exponent = std::stof(argv[++i]);
+            } catch (const std::exception& e) {
+                std::println(std::cerr, "Error: {} requires 7 numbers <color:vec3> <direction:vec3> <exponent:float>",
+                             arg);
+                return EXIT_FAILURE;
+            }
         } else if (arg == "-B" || arg == "--background") {
             if (i + 3 >= argc) {
                 std::println(std::cerr, "Error: {} requires 3 numbers <color:vec3>", arg);
@@ -149,6 +172,7 @@ int main(int argc, char* argv[]) {
         scene.setBackground(backgroundColor);
         if (showPlane) loader.addPlane(scene, planeSize);
         if (cameraSet) scene.setCamera(userCamera);
+        if (sunSet) scene.setSun(sun);
         std::shared_ptr<RenderTarget> egl = TargetManager::getInstance().createEGLTarget(width, height);
         engine.renderFrame(*egl, scene, samples);
 

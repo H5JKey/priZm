@@ -57,6 +57,8 @@ int main() try {
         int project_id;
         std::string inputBucket, outputBucket, inputKey;
         std::string modelName;
+        glm::vec3 background;
+        Scene::Sun sun;
         try {
             logger.info(std::format("Listening for messages..."));
             std::string message = consumer.consume();
@@ -72,6 +74,14 @@ int main() try {
                 inputKey = inputJson["input"]["key"];
 
                 outputBucket = inputJson["output"]["bucket"];
+
+                background = glm::vec3(inputJson["background"].at(0), inputJson["background"].at(1),
+                                       inputJson["background"].at(2));
+                sun.direction = glm::vec3(inputJson["sun"]["direction"].at(0), inputJson["sun"]["direction"].at(1),
+                                          inputJson["sun"]["direction"].at(2));
+                sun.color = glm::vec3(inputJson["sun"]["color"].at(0), inputJson["sun"]["color"].at(1),
+                                      inputJson["sun"]["color"].at(2));
+                sun.exponent = inputJson["sun"]["exponent"];
             } catch (const std::exception& e) {
                 logger.error(std::format("Failed to parse json from string: {}. Error: {}", message, e.what()));
                 throw;
@@ -80,7 +90,8 @@ int main() try {
             data = s3client.getData(inputBucket, inputKey);
 
             Scene scene = sceneLoader.loadGltfFromMemory(data);
-            scene.setBackground(glm::vec3(0.53, 0.81, 0.92));
+            scene.setBackground(background);
+            scene.setSun(sun);
             std::vector<uint8_t> output;
             if (config.preview())
                 output = std::move(renderPipeline(engine, scene, 200, 200 * (static_cast<float>(height) / width), 5));

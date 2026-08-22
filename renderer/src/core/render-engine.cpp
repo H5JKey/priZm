@@ -4,6 +4,7 @@
 #include <string>
 
 #include "context-guard.hpp"
+#include "glm/geometric.hpp"
 #include "logger.hpp"
 #include "render-target.hpp"
 #include "utils.hpp"
@@ -174,8 +175,8 @@ GLuint RenderEngine::compileShader(const std::string& source) {
     return program;
 }
 
-void RenderEngine::pathTracing(RenderTarget& target, const Scene::Camera& camera, const glm::vec3 backgroundColor,
-                               int samples) {
+void RenderEngine::pathTracing(RenderTarget& target, const Scene::Camera& camera, const glm::vec3& backgroundColor,
+                               const Scene::Sun& sun, int samples) {
     logger.info("Path tracing started");
 
     glUseProgram(pathTracingProgram);
@@ -194,6 +195,10 @@ void RenderEngine::pathTracing(RenderTarget& target, const Scene::Camera& camera
     glUniform3f(glGetUniformLocation(pathTracingProgram, "uBackgroundColor"), backgroundColor.r, backgroundColor.g,
                 backgroundColor.b);
     glUniform1f(glGetUniformLocation(pathTracingProgram, "uFov"), tan(camera.fov / 2.0f));
+    glUniform3f(glGetUniformLocation(pathTracingProgram, "uSun.color"), sun.color.x, sun.color.y, sun.color.z);
+    glUniform3f(glGetUniformLocation(pathTracingProgram, "uSun.direction"), sun.direction.x, sun.direction.y,
+                sun.direction.z);
+    glUniform1f(glGetUniformLocation(pathTracingProgram, "uSun.exponent"), sun.exponent);
 
     glBindImageTexture(0, target.getRawTexture(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
@@ -430,10 +435,11 @@ void RenderEngine::renderFrame(RenderTarget& target, const Scene& scene, int sam
             throw;
         }
         auto camera = scene.getCamera();
-        auto backgroundColor = scene.getBackgroundColor();
         loadTextures(scene.getTexturesData());
         uploadGPUBuffers(gpuData, bvh);
-        pathTracing(target, camera, backgroundColor, samples);
+        auto sun = scene.getSun();
+        sun.direction = glm::normalize(sun.direction);
+        pathTracing(target, camera, scene.getBackgroundColor(), sun, samples);
 
         fillGbuffer(target, gpuData, camera);
         logger.info("Denoising started");
