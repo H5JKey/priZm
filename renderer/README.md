@@ -102,6 +102,7 @@ docker run --rm renderer renderer_cli <width> <height> <samples> <input_scene> [
 | `-p, --plane` | `float` | Add ground plane at scene center with specified size |
 | `-c, --camera` | `vec3 vec3 float` | Set camera: `position lookAt fov` |
 | `-B, --background` | `vec3` | Set background color (default: vec3(0,0,0)) |
+| `-S, --sun` | `vec3 vec3 float` | Set sun: `color direction exponent` |
 
 ---
 
@@ -150,8 +151,6 @@ Environment variables take precedence over values defined in the .env file and o
 | `S3_HOST` |	S3 storage endpoint | Yes | `-` |
 | `S3_ACCESS_KEY`	| S3 access key | Yes | `-` |
 | `S3_SECRET_KEY`	| S3 secret key	| Yes | `-` |
-| `S3_BUCKET_INPUT`	| S3 bucket name for input files | Yes | `-` |
-| `S3_BUCKET_OUTPUT` | S3 bucket name for output files | Yes | `-` |
 | `RENDERER_LOG_LEVEL`	| Log level (DEBUG, INFO, WARNING, ERROR)	|	No | `INFO` |
 | `RENDERER_LOG_DEBUG`	| Enable debug logging (true/false)	| No | `true` |
 | `RENDERER_PREVIEW` | Generate image in lower resolution and only 5 samples (true/false) | No | `false` |

@@ -16,7 +16,7 @@ PriZm is an open-source rendering platform that combines a physically based path
 
 ```text
 priZm/
-├── backend/                 # Python-based server infrastructure
+├── app/                 # Python-based server infrastructure
 │   ├── api/                 # REST API endpoints
 │   ├── core/                # Core application logic
 │   ├── dependencies/        
@@ -41,7 +41,7 @@ priZm/
 
 See the [Renderer documentation](renderer/README.md).
 
-### Backend
+### App (Backend)
 > Manages rendering jobs, storage, client communications  and other server-side functionality.
 
 See the [Backend documentation](app/README.md).

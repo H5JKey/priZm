@@ -27,9 +27,9 @@ void printHelp(std::string_view programName) {
     std::println(" -v, --verbose       Print detailed logs");
     std::println(" -d, --debug         Output debug images: raw, albedo, normals");
     std::println(" -p, --plane         Add plane to scene");
-    std::println(" -c, --camera        Set camera properties");
+    std::println(" -c, --camera        Set camera properties: origin, direction, fov");
     std::println(" -B, --background    Set background color (default: vec3(0,0,0))");
-    std::println(" -S, --sun           Set sun properties");
+    std::println(" -S, --sun           Set sun properties: color, direction, exponent");
 }
 
 void printUsage(std::string_view programName) {
