@@ -203,7 +203,105 @@ async function deleteCurrentUserProfile() {
 
 // ===== МОИ ПРОЕКТЫ =====
 async function getMyProjects(page = 1, size = 10) {
-    return await apiRequest(`/users/me/projects?page=${page}&size=${size}`);
+    return await apiRequest(`/projects/about-me?page=${page}&size=${size}`);
+}
+
+// ===== ЗАГРУЗКА МОИХ ПРОЕКТОВ =====
+let myProjectsPage = 1;
+const MY_PROJECTS_SIZE = 10;
+
+async function loadMyProjects(page = 1) {
+    const container = document.getElementById('myProjectsGrid');
+    if (!container) return;
+
+    try {
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.style.display = 'block';
+
+        console.log(`📥 Загрузка моих проектов: страница ${page}`);
+        const data = await getMyProjects(page, MY_PROJECTS_SIZE);
+        console.log('📦 Мои проекты:', data);
+
+        if (data.project_list && data.project_list.length > 0) {
+            container.innerHTML = data.project_list.map(p => renderProjectCard(p)).join('');
+
+            document.querySelectorAll('.project-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = card.dataset.id;
+                    window.location.href = `project.html?id=${id}`;
+                });
+            });
+        } else {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-box-open"></i>
+                    <p>У вас нет проектов</p>
+                    <small>Создайте свой первый проект!</small>
+                    <br><br>
+                    <a href="create.html" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Создать проект
+                    </a>
+                </div>
+            `;
+        }
+
+        // Определяем общее количество страниц
+        let totalPages = page;
+        if (data.total_pages) {
+            totalPages = data.total_pages;
+        } else if (data.total) {
+            totalPages = Math.ceil(data.total / MY_PROJECTS_SIZE);
+        } else if (data.project_list.length === MY_PROJECTS_SIZE) {
+            totalPages = page + 1;
+        }
+
+        updateMyProjectsPagination(page, totalPages);
+
+    } catch (error) {
+        console.error('❌ Ошибка загрузки моих проектов:', error);
+        container.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Ошибка загрузки: ${error.message}</p>
+                <button onclick="loadMyProjects(${myProjectsPage})" class="btn btn-secondary">
+                    <i class="fas fa-redo"></i> Повторить
+                </button>
+            </div>
+        `;
+    } finally {
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+    }
+}
+
+// ===== ПАГИНАЦИЯ ДЛЯ МОИХ ПРОЕКТОВ =====
+function updateMyProjectsPagination(current, total) {
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+
+    myProjectsPage = current;
+
+    if (prevBtn) {
+        prevBtn.disabled = current <= 1;
+        prevBtn.onclick = () => {
+            if (current > 1) {
+                const newPage = current - 1;
+                loadMyProjects(newPage);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+    }
+
+    if (nextBtn) {
+        nextBtn.disabled = current >= total;
+        nextBtn.onclick = () => {
+            if (current < total) {
+                const newPage = current + 1;
+                loadMyProjects(newPage);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+    }
 }
 
 // ===== ПРОЕКТЫ =====
@@ -484,6 +582,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentPage === '' || currentPage === 'index.html') {
         console.log('🏠 Загрузка главной страницы');
         loadProjects(1);
+    }
+
+    // ===== МОИ ПРОЕКТЫ =====
+    if (currentPage === 'my-projects.html') {
+        console.log('📁 Загрузка моих проектов');
+        loadMyProjects(1);
     }
 
     // ===== ЗАГРУЗКА ПРОФИЛЯ =====
@@ -867,6 +971,7 @@ async function loadProfile() {
         `;
     }
 }
+
 
 // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 function setupDropdownHandlers() {
