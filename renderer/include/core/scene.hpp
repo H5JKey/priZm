@@ -64,22 +64,33 @@ class Scene {
         float fov;
     };
 
+    struct Sun {
+        Sun() : direction(0, 1, 0), color(0, 0, 0), exponent(128) {}
+        glm::vec3 direction;
+        glm::vec3 color;
+        float exponent;
+    };
+
    private:
     friend class SceneLoader;
 
     Camera camera;
+    Sun sun;
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
     glm::vec3 backgroundColor;
+
     std::vector<TextureData> textures;
 
    public:
     Scene();
     Camera getCamera() const noexcept;
+    Sun getSun() const noexcept;
     glm::vec3 getBackgroundColor() const noexcept;
     const std::vector<Mesh>& getMeshes() const noexcept;
     const std::vector<Material>& getMaterials() const noexcept;
     const std::vector<TextureData>& getTexturesData() const noexcept;
     void setCamera(const Camera& camera);
     void setBackground(const glm::vec3 backgroundColor);
+    void setSun(const Sun& sun);
 };

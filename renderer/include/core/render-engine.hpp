@@ -63,7 +63,8 @@ class RenderEngine {
     ~RenderEngine();
 
    private:
-    void pathTracing(RenderTarget& target, const Scene::Camera& camera, const glm::vec3 backgroundColor, int samples);
+    void pathTracing(RenderTarget& target, const Scene::Camera& camera, const glm::vec3& backgroundColor,
+                     const Scene::Sun& sun, int samples);
     void fillGbuffer(RenderTarget& target, const GPUData& gpuData, const Scene::Camera& camera);
     void postProcess(RenderTarget& target) const;
     void uploadGPUBuffers(const GPUData& gpuData, const BVH& bvh);
