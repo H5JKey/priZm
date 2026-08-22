@@ -195,12 +195,7 @@ async function updateCurrentUserProfile(surname, name, username, email) {
     });
 }
 
-// ===== УДАЛЕНИЕ АККАУНТА =====
-async function deleteCurrentUserProfile() {
-    return await apiRequest('/users/about-me', {
-        method: 'DELETE'
-    });
-}
+
 
 // ===== МОИ ПРОЕКТЫ =====
 async function getMyProjects(page = 1, size = 10) {
@@ -1465,23 +1460,102 @@ function cancelEdit() {
     }
 }
 
-async function deleteAccount() {
-    if (!confirm('⚠️ Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')) {
-        return;
-    }
+// ===== УДАЛЕНИЕ АККАУНТА =====
+async function deleteCurrentUserProfile() {
+    return await apiRequest('/users/about-me', {
+        method: 'DELETE'
+    });
+}
 
-    if (!confirm('Еще раз: ВСЕ ДАННЫЕ БУДУТ УДАЛЕНЫ. Продолжить?')) {
-        return;
-    }
+// ===== УДАЛЕНИЕ АККАУНТА С МОДАЛЬНЫМ ОКНОМ =====
+function deleteAccount() {
+    // Показываем модальное окно
+    const modal = document.getElementById('deleteModal');
+    const usernameDisplay = document.getElementById('modalUsernameDisplay');
+    const confirmInput = document.getElementById('modalConfirmInput');
+    const confirmBtn = document.getElementById('modalConfirmDelete');
+    const errorDiv = document.getElementById('modalError');
 
-    try {
-        await deleteCurrentUserProfile();
-        alert('✅ Аккаунт удален');
-        logout();
-    } catch (error) {
-        alert('❌ Ошибка удаления: ' + error.message);
+    // Получаем текущего пользователя
+    getCurrentUserProfile().then(user => {
+        if (user && user.username) {
+            usernameDisplay.textContent = user.username;
+        }
+    }).catch(() => {
+        usernameDisplay.textContent = 'username';
+    });
+
+    // Сбрасываем состояние
+    confirmInput.value = '';
+    errorDiv.style.display = 'none';
+    confirmBtn.disabled = true;
+    modal.style.display = 'flex';
+
+    // Слушаем ввод
+    confirmInput.oninput = function() {
+        const username = usernameDisplay.textContent;
+        if (this.value === username) {
+            errorDiv.style.display = 'none';
+            confirmBtn.disabled = false;
+        } else {
+            errorDiv.style.display = 'block';
+            confirmBtn.disabled = true;
+        }
+    };
+
+    // Подтверждение удаления
+    confirmBtn.onclick = async function() {
+    const username = usernameDisplay.textContent;
+    if (confirmInput.value === username) {
+        try {
+            await deleteCurrentUserProfile();
+
+            // === ПРИНУДИТЕЛЬНЫЙ ВЫХОД ===
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+
+            // Закрываем модалку
+            const modal = document.getElementById('deleteModal');
+            if (modal) modal.style.display = 'none';
+
+            // === ПРИНУДИТЕЛЬНЫЙ РЕДИРЕКТ ===
+            window.location.replace('/login.html');
+
+        } catch (error) {
+            const errorDiv = document.getElementById('modalError');
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = 'Ошибка удаления: ' + error.message;
+            errorDiv.style.color = '#e74c3c';
+        }
+    }
+    };
+}
+
+
+// ===== ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА =====
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 }
+
+// Закрытие по клику вне окна
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('deleteModal');
+    if (e.target === modal) {
+        closeDeleteModal();
+    }
+});
+
+// Закрытие по Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+
+
 
 // Экспорт для использования в других скриптах
 window.api = {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль пользователя — 3D Render</title>
+    <title>Профиль — 3D Render</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -50,6 +50,32 @@
             </div>
         </div>
     </main>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ УДАЛЕНИЯ ===== -->
+    <div id="deleteModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i> Удаление аккаунта</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Вы действительно хотите удалить свой аккаунт?</strong></p>
+                <p style="color: #e74c3c; font-size: 14px;">Это действие необратимо. Все ваши проекты и данные будут удалены навсегда.</p>
+                <div class="modal-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Для подтверждения введите свой username: <strong id="modalUsernameDisplay"></strong></span>
+                </div>
+                <input type="text" id="modalConfirmInput" placeholder="Введите username" class="modal-input">
+                <div id="modalError" class="error-message" style="display:none; margin-top: 12px;">Username не совпадает</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Отмена</button>
+                <button class="btn btn-danger" id="modalConfirmDelete" disabled>
+                    <i class="fas fa-trash"></i> Удалить навсегда
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
