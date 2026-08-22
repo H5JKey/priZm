@@ -195,6 +195,7 @@ async function updateCurrentUserProfile(surname, name, username, email) {
     });
 }
 
+// ===== УДАЛЕНИЕ АККАУНТА =====
 async function deleteCurrentUserProfile() {
     return await apiRequest('/users/about-me', {
         method: 'DELETE'
@@ -890,7 +891,7 @@ async function loadProfile() {
 
                 <!-- Форма редактирования (скрыта по умолчанию) -->
                 <div id="editForm" style="display:none;" class="edit-form">
-                    <h3>Редактировать профиль</h3>
+                    <h3>✏️ Редактировать профиль</h3>
                     <form id="updateProfileForm">
                         <div class="form-group">
                             <label>Фамилия</label>
@@ -928,13 +929,21 @@ async function loadProfile() {
         if (updateForm) {
             updateForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const surname = document.getElementById('editSurname').value;
-                const name = document.getElementById('editName').value;
-                const username = document.getElementById('editUsername').value;
-                const email = document.getElementById('editEmail').value;
+
+                const surname = document.getElementById('editSurname').value.trim();
+                const name = document.getElementById('editName').value.trim();
+                const username = document.getElementById('editUsername').value.trim();
+                const email = document.getElementById('editEmail').value.trim();
 
                 const errorDiv = document.getElementById('updateError');
                 const successDiv = document.getElementById('updateSuccess');
+
+                // Валидация
+                if (!surname || !name || !username || !email) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = 'Все поля обязательны для заполнения';
+                    return;
+                }
 
                 try {
                     errorDiv.style.display = 'none';
@@ -943,20 +952,20 @@ async function loadProfile() {
                     await updateCurrentUserProfile(surname, name, username, email);
 
                     successDiv.style.display = 'block';
-                    successDiv.textContent = '✅ Профиль обновлен!';
+                    successDiv.textContent = '✅ Профиль успешно обновлен!';
 
                     setTimeout(() => {
                         loadProfile();
                     }, 1500);
                 } catch (error) {
                     errorDiv.style.display = 'block';
-                    errorDiv.textContent = error.message;
+                    errorDiv.textContent = error.message || 'Ошибка обновления профиля';
                 }
             });
         }
 
-        // Добавляем обработчики для дропдауна
-        setupDropdownHandlers();
+        // Настройка дропдауна
+        setupDropdown();
 
     } catch (error) {
         console.error('❌ Ошибка загрузки профиля:', error);
@@ -972,6 +981,18 @@ async function loadProfile() {
     }
 }
 
+// ===== ОБНОВЛЕНИЕ ПРОФИЛЯ =====
+async function updateCurrentUserProfile(surname, name, username, email) {
+    return await apiRequest('/users/about-me', {
+        method: 'PUT',
+        body: JSON.stringify({
+            surname: surname,
+            name: name,
+            username: username,
+            email: email
+        })
+    });
+}
 
 // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 function setupDropdownHandlers() {
@@ -995,7 +1016,12 @@ function setupDropdownHandlers() {
 function editProfile() {
     const form = document.getElementById('editForm');
     if (form) {
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        if (form.style.display === 'none' || form.style.display === '') {
+            form.style.display = 'block';
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            form.style.display = 'none';
+        }
     }
 }
 
@@ -1007,22 +1033,21 @@ function cancelEdit() {
 }
 
 async function deleteAccount() {
-    if (!confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')) {
+    if (!confirm('⚠️ Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')) {
+        return;
+    }
+
+    if (!confirm('Еще раз: ВСЕ ДАННЫЕ БУДУТ УДАЛЕНЫ. Продолжить?')) {
         return;
     }
 
     try {
         await deleteCurrentUserProfile();
-        alert('Аккаунт удален');
+        alert('✅ Аккаунт удален');
         logout();
     } catch (error) {
-        alert('Ошибка удаления: ' + error.message);
+        alert('❌ Ошибка удаления: ' + error.message);
     }
-}
-
-// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
-function editProfile() {
-    alert('Функция редактирования профиля (будет добавлена)');
 }
 
 // Экспорт для использования в других скриптах
