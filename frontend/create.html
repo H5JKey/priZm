@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- ===== ШАПКА ===== -->
     <header class="header">
         <div class="container">
             <div class="header-content">
@@ -20,16 +19,15 @@
                     <a href="index.html"><i class="fas fa-home"></i> Главная</a>
                     <a href="create.html" class="active"><i class="fas fa-plus-circle"></i> Создать</a>
 
-                    <!-- Аватарка с выпадающим меню -->
                     <div class="avatar-dropdown">
-                        <button class="avatar-btn" id="avatarBtn">
+                        <button class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
                             <i class="fas fa-user-circle"></i>
                         </button>
                         <div class="dropdown-menu" id="dropdownMenu">
                             <a href="profile.html" class="dropdown-item">
                                 <i class="fas fa-user"></i> Мой профиль
                             </a>
-                            <a href="#" class="dropdown-item" id="myProjectsBtn">
+                            <a href="my-projects.html" class="dropdown-item">
                                 <i class="fas fa-project-diagram"></i> Мои проекты
                             </a>
                             <hr class="dropdown-divider">
@@ -43,74 +41,87 @@
         </div>
     </header>
 
-    <!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
     <main class="main">
         <div class="container">
             <div class="page-header">
                 <h1><i class="fas fa-plus-circle"></i> Создать новый проект</h1>
-                <p class="subtitle">Загрузите GLB-файл и настройте параметры</p>
+                <p class="subtitle">Загрузите GLB-файл и настройте параметры рендера</p>
             </div>
 
             <form id="createProjectForm" class="create-form" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="projectName"><i class="fas fa-tag"></i> Название проекта *</label>
-                    <input type="text" id="projectName" placeholder="Введите название" required>
-                </div>
+                <!-- Информация о проекте -->
+                <div class="form-section">
+                    <h3>📋 Информация о проекте</h3>
 
-                <div class="form-group">
-                    <label for="projectDescription"><i class="fas fa-align-left"></i> Описание</label>
-                    <textarea id="projectDescription" rows="4" placeholder="Опишите ваш проект"></textarea>
-                </div>
+                    <div class="form-group">
+                        <label for="projectName"><i class="fas fa-tag"></i> Название проекта *</label>
+                        <input type="text" id="projectName" placeholder="Введите название" required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="glbFile"><i class="fas fa-file-archive"></i> GLB-файл *</label>
-                    <input type="file" id="glbFile" accept=".glb" required>
-                    <small class="helper-text">Поддерживаются файлы .glb до 50 МБ</small>
-                </div>
+                    <div class="form-group">
+                        <label for="projectDescription"><i class="fas fa-align-left"></i> Описание</label>
+                        <textarea id="projectDescription" rows="3" placeholder="Опишите ваш проект"></textarea>
+                    </div>
 
-                <div class="form-group">
-                    <label for="renderSettings"><i class="fas fa-sliders-h"></i> Настройки рендера</label>
-                    <div class="render-settings">
-                        <div class="setting-item">
-                            <label for="quality">Качество</label>
-                            <select id="quality">
-                                <option value="low">Низкое</option>
-                                <option value="medium" selected>Среднее</option>
-                                <option value="high">Высокое</option>
-                            </select>
-                        </div>
-                        <div class="setting-item">
-                            <label for="resolution">Разрешение</label>
-                            <select id="resolution">
-                                <option value="512">512x512</option>
-                                <option value="1024" selected>1024x1024</option>
-                                <option value="2048">2048x2048</option>
-                            </select>
-                        </div>
-                        <div class="setting-item">
-                            <label for="background">Фон</label>
-                            <select id="background">
-                                <option value="white">Белый</option>
-                                <option value="black" selected>Черный</option>
-                                <option value="transparent">Прозрачный</option>
-                            </select>
+                    <div class="form-group">
+                        <label for="glbFile"><i class="fas fa-file-archive"></i> GLB-файл *</label>
+                        <input type="file" id="glbFile" accept=".glb" required>
+                        <small class="helper-text">Поддерживаются файлы .glb до 50 МБ</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Доступ</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="visibility" value="public" checked>
+                                <i class="fas fa-globe"></i> Публичный
+                                <small>Все пользователи увидят проект</small>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="visibility" value="private">
+                                <i class="fas fa-lock"></i> Приватный
+                                <small>Только вы сможете видеть проект</small>
+                            </label>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Доступ</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="visibility" value="public" checked>
-                            <i class="fas fa-globe"></i> Публичный
-                            <small>Все пользователи увидят проект</small>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="visibility" value="private">
-                            <i class="fas fa-lock"></i> Приватный
-                            <small>Только вы сможете видеть проект</small>
-                        </label>
+                <!-- Настройки рендера -->
+                <div class="form-section">
+                    <h3>🎨 Настройки рендера</h3>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="width">Ширина (px)</label>
+                            <input type="number" id="width" value="1920" min="100" max="4096" required>
+                        </div>
+                        <div class="form-group half">
+                            <label for="height">Высота (px)</label>
+                            <input type="number" id="height" value="1080" min="100" max="4096" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="samples">Количество сэмплов</label>
+                        <input type="number" id="samples" value="128" min="1" max="1024" required>
+                        <small class="helper-text">Больше сэмплов = лучше качество, но дольше рендер</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="denoiser">Денойзер</label>
+                            <select id="denoiser">
+                                <option value="true">Включен</option>
+                                <option value="false">Выключен</option>
+                            </select>
+                        </div>
+                        <div class="form-group half">
+                            <label for="gpu">GPU рендеринг</label>
+                            <select id="gpu">
+                                <option value="true">Включен</option>
+                                <option value="false">Выключен</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 

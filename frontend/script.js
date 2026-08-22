@@ -540,6 +540,28 @@ function setupDropdown() {
     }
 }
 
+// ===== ЗАГРУЗКА ФАЙЛА =====
+async function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('uploaded_file', file);
+
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE}/files/upload`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Ошибка загрузки файла');
+    }
+
+    return await response.json();
+}
+
 // ===== ОТКРЫТИЕ МЕНЮ АВАТАРКИ =====
 function toggleMenu() {
     const menu = document.getElementById('dropdownMenu');
@@ -547,6 +569,14 @@ function toggleMenu() {
         menu.classList.toggle('show');
         console.log('Меню переключено:', menu.classList.contains('show'));
     }
+}
+
+// ===== СОЗДАНИЕ ПРОЕКТА =====
+async function createProjectData(projectData) {
+    return await apiRequest('/projects/create', {
+        method: 'POST',
+        body: JSON.stringify(projectData)
+    });
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ =====
@@ -698,44 +728,82 @@ document.addEventListener('DOMContentLoaded', () => {
         createForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = new FormData();
-            const name = document.getElementById('projectName').value;
-            const description = document.getElementById('projectDescription').value;
-            const file = document.getElementById('glbFile').files[0];
-            const visibility = document.querySelector('input[name="visibility"]:checked').value;
-            const quality = document.getElementById('quality').value;
-            const resolution = document.getElementById('resolution').value;
-            const background = document.getElementById('background').value;
-
-            if (!file) {
-                const errorDiv = document.getElementById('createError');
-                errorDiv.style.display = 'block';
-                errorDiv.textContent = 'Пожалуйста, выберите GLB-файл';
-                return;
-            }
-
-            formData.append('name', name);
-            formData.append('description', description);
-            formData.append('file', file);
-            formData.append('visibility', visibility);
-            formData.append('settings', JSON.stringify({ quality, resolution, background }));
-
             const errorDiv = document.getElementById('createError');
             const successDiv = document.getElementById('createSuccess');
 
+            // Скрываем старые сообщения
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
             try {
-                errorDiv.style.display = 'none';
-                successDiv.style.display = 'none';
+                // 1. Получаем данные из формы
+                const name = document.getElementById('projectName').value.trim();
+                const description = document.getElementById('projectDescription').value.trim();
+                const file = document.getElementById('glbFile').files[0];
+                const visibility = document.querySelector('input[name="visibility"]:checked').value;
 
-                const result = await createProject(formData);
+                const width = parseInt(document.getElementById('width').value);
+                const height = parseInt(document.getElementById('height').value);
+                const samples = parseInt(document.getElementById('samples').value);
+                const denoiser = document.getElementById('denoiser').value === 'true';
+                const gpu = document.getElementById('gpu').value === 'true';
 
+                // 2. Валидация
+                if (!name) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = 'Введите название проекта';
+                    return;
+                }
+
+                if (!file) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = 'Выберите GLB-файл';
+                    return;
+                }
+
+                if (file.size > 50 * 1024 * 1024) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = 'Файл слишком большой. Максимум 50 МБ';
+                    return;
+                }
+
+                // 3. Загружаем файл
+                console.log('📤 Загрузка файла...');
+                const fileData = await uploadFile(file);
+                console.log('✅ Файл загружен:', fileData);
+
+                // 4. Создаем проект
+                const projectData = {
+                    render: {
+                        width: width,
+                        height: height,
+                        samples: samples,
+                        denoiser: denoiser,
+                        gpu: gpu
+                    },
+                    project: {
+                        name: name,
+                        description: description || '',
+                        source_file_id: fileData.id,
+                        visibility: visibility
+                    }
+                };
+
+                console.log('📦 Создание проекта:', projectData);
+                const result = await createProjectData(projectData);
+                console.log('✅ Проект создан:', result);
+
+                // 5. Успех
                 successDiv.style.display = 'block';
-                successDiv.textContent = '✅ Проект успешно создан!';
+                successDiv.textContent = '✅ Проект успешно создан! Перенаправление...';
 
+                // 6. Переход на страницу проекта
                 setTimeout(() => {
                     window.location.href = `project.html?id=${result.id}`;
-                }, 1500);
+                }, 2000);
+
             } catch (error) {
+                console.error('❌ Ошибка:', error);
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = error.message || 'Ошибка создания проекта';
             }
