@@ -23,18 +23,18 @@
 
 ### Build Modes
 
-| Mode | CMake Flag | Output | Description |
-|------|-----------|--------|-------------|
-| **Core** | `-DBUILD_MODE=CORE` | `-` | Build only core rendering library for testing |
-| **CLI** | `-DBUILD_MODE=CLI` | `renderer_cli` | Standalone CLI application |
-| **Worker** | `-DBUILD_MODE=WORKER` | `renderer_worker` | Build renderer worker for web service |
-| **Both** | `-DBUILD_MODE=BOTH` | `renderer_cli` + `renderer_worker` | Build both CLI and worker versions |
+| Mode | CMake Flag | Docker Build Flag | Output | Description |
+|------|-----------|--------|-----------|----------|
+| **Core** | `-DBUILD_MODE=CORE` | `BUILD_MODE=CORE` | - | Build only core rendering library for testing |
+| **CLI** | `-DBUILD_MODE=CLI` | `BUILD_MODE=CLI` | `renderer_cli` | Standalone CLI application |
+| **Worker** | `-DBUILD_MODE=WORKER` | `BUILD_MODE=WORKER` | `renderer_worker` | Build renderer worker for web service |
+| **Both** | `-DBUILD_MODE=BOTH` | `BUILD_MODE=BOTH` | `renderer_cli` + `renderer_worker` | Build both CLI and worker versions |
 
 ### Build Options
 
-| Option | CMake Flag | Description |
-|--------|-----------|-------------|
-| **Tests** | `-DBUILD_TESTS=ON` | Build unit tests |
+| Option | CMake Flag | Docker Build Flag | Description |
+|--------|-----------|---------------|---------|
+| **Tests** | `-DBUILD_TESTS=ON` | `BUILD_TESTS=ON` | Build unit tests |
 
 ---
 
