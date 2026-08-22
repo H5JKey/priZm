@@ -129,6 +129,8 @@ class ProjectService:
 
         get_projects = self.project_repository.get_user_public_projects(
             user_id,
+            size,
+            page,
         )
         projects = [
             ProjectResponse.model_validate(project) for project in await get_projects

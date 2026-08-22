@@ -141,6 +141,8 @@ class AbstractProjectRepository(AbstractRepository):
     async def get_user_public_projects(
         self,
         user_id: int,
+        size: int,
+        page: int,
     ) -> list[Project]:
         """
         Получить информацию о публичных проектах пользователя.
