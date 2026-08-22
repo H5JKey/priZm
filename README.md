@@ -39,7 +39,7 @@ priZm/
 ---
 
 ### Renderer
-> Path tracing engine that can run as s standalone CLI application or as a distributed worker.
+> Path tracing engine that can run as a standalone CLI application or as a distributed worker.
 
 See the [Renderer documentation](renderer/README.md).
 
