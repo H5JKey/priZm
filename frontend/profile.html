@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- ===== ШАПКА ===== -->
     <header class="header">
         <div class="container">
             <div class="header-content">
@@ -20,16 +19,15 @@
                     <a href="index.html"><i class="fas fa-home"></i> Главная</a>
                     <a href="create.html"><i class="fas fa-plus-circle"></i> Создать</a>
 
-                    <!-- Аватарка с выпадающим меню -->
                     <div class="avatar-dropdown">
-                        <button class="avatar-btn" id="avatarBtn">
+                        <button class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
                             <i class="fas fa-user-circle"></i>
                         </button>
                         <div class="dropdown-menu" id="dropdownMenu">
                             <a href="profile.html" class="dropdown-item">
                                 <i class="fas fa-user"></i> Мой профиль
                             </a>
-                            <a href="#" class="dropdown-item" id="myProjectsBtn">
+                            <a href="my-projects.html" class="dropdown-item">
                                 <i class="fas fa-project-diagram"></i> Мои проекты
                             </a>
                             <hr class="dropdown-divider">
