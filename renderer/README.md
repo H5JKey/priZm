@@ -180,6 +180,8 @@ The renderer worker communicates with other services through JSON messages passe
     "width": 1920,
     "height": 1080,
     "samples": 128,
+    "denoiser": true,
+    "gpu": true,
     "background": [0.7, 0.7, 0.95],
     "sun": {
       "direction": [1.0, 1.0, 0.0],
