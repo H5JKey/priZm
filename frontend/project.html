@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проект — 3D Render</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- ШАПКА -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-cube"></i>
+                    <span>3D Render</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html"><i class="fas fa-home"></i> Главная</a>
+                    <a href="create.html"><i class="fas fa-plus-circle"></i> Создать</a>
+
+                    <div class="avatar-dropdown">
+                        <button class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="fas fa-user"></i> Мой профиль
+                            </a>
+                            <a href="my-projects.html" class="dropdown-item">
+                                <i class="fas fa-project-diagram"></i> Мои проекты
+                            </a>
+                            <hr class="dropdown-divider">
+                            <button class="dropdown-item dropdown-danger" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Выйти
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="main">
+        <div class="container">
+            <button onclick="history.back()" class="btn btn-secondary back-btn">
+                <i class="fas fa-arrow-left"></i> Назад
+            </button>
+
+            <!-- КОНТЕЙНЕР ДЛЯ ПРОЕКТА -->
+            <div id="projectDetail">
+                <div id="loading" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Загрузка...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
