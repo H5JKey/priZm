@@ -930,3 +930,338 @@ a {
 .dropdown-header i {
     color: #4a6cf7;
 }
+
+/* ===== ДЕТАЛЬНАЯ СТРАНИЦА ПРОЕКТА ===== */
+.project-detail-content {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.project-detail-header {
+    border-bottom: 1px solid #e8ecf1;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+.project-detail-header h1 {
+    margin: 0 0 12px 0;
+    font-size: 28px;
+}
+
+.project-detail-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-processing {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-rendering {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-completed {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.status-failed {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.project-detail-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+}
+
+@media (max-width: 768px) {
+    .project-detail-body {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}
+
+.detail-section {
+    margin-bottom: 28px;
+}
+
+.detail-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.detail-section p {
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.render-settings-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.render-settings-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f2f5;
+    font-size: 14px;
+    color: #555;
+}
+
+.render-settings-list li:last-child {
+    border-bottom: none;
+}
+
+.render-settings-list li span:first-child {
+    color: #888;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.file-item i {
+    font-size: 18px;
+    color: #4a6cf7;
+    width: 24px;
+    text-align: center;
+}
+
+.file-item span {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-missing {
+    font-size: 13px;
+    color: #999;
+    margin-left: auto;
+}
+
+.render-preview {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.render-preview h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 12px 0;
+}
+
+.render-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f0f2f5;
+}
+
+.no-render {
+    text-align: center;
+    padding: 50px 20px;
+    color: #999;
+}
+
+.no-render i {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.no-render small {
+    display: block;
+    margin-top: 8px;
+    color: #bbb;
+    font-size: 13px;
+}
+
+/* ===== ВЛАДЕЛЕЦ ===== */
+.owner-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.owner-card:hover {
+    background: #eef0f3;
+}
+
+.owner-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #4a6cf7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.owner-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.owner-name {
+    font-weight: 600;
+    color: #1a1a2e;
+    font-size: 15px;
+}
+
+.owner-username {
+    color: #4a6cf7;
+    font-size: 14px;
+}
+
+.owner-hint {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 2px;
+}
+
+/* ===== СТРАНИЦА ПРОФИЛЯ С ПРОЕКТАМИ ===== */
+.profile-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 32px;
+}
+
+.profile-header {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+@media (max-width: 600px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+.profile-avatar-large {
+    font-size: 80px;
+    color: #4a6cf7;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h1 {
+    margin: 0 0 4px 0;
+    font-size: 28px;
+}
+
+.profile-name {
+    color: #666;
+    font-size: 16px;
+    margin: 4px 0;
+}
+
+.profile-email {
+    color: #666;
+    margin: 4px 0;
+}
+
+.profile-date {
+    color: #999;
+    font-size: 14px;
+    margin: 4px 0;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 12px;
+    color: #666;
+    font-size: 14px;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px solid #e8ecf1;
+}
+
+.profile-note {
+    color: #999;
+    font-size: 14px;
+}
+
+.profile-projects-section {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.profile-projects-section h2 {
+    margin: 0 0 20px 0;
+    font-size: 22px;
+}
+
+.page-info {
+    color: #666;
+    font-size: 14px;
+    padding: 0 12px;
+}

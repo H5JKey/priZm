@@ -395,12 +395,6 @@ function renderProjectCard(project) {
                 <h3>${project.name}</h3>
                 <p class="project-description">${project.description || 'Нет описания'}</p>
                 <div class="project-meta">
-                    <span class="project-author">
-                        <i class="fas fa-user"></i> Пользователь #${project.user_id}
-                    </span>
-                    <span class="project-id">
-                        <i class="fas fa-hashtag"></i> ID: ${project.id}
-                    </span>
                 </div>
             </div>
         </div>
@@ -540,6 +534,16 @@ function setupDropdown() {
     }
 }
 
+// ===== ПОЛУЧЕНИЕ ПОЛЬЗОВАТЕЛЯ ПО ID =====
+async function getUserById(userId) {
+    return await apiRequest(`/users/${userId}`);
+}
+
+// ===== ПОЛУЧЕНИЕ ПРОЕКТОВ ПОЛЬЗОВАТЕЛЯ =====
+async function getUserProjectsById(userId, page = 1, size = 10) {
+    return await apiRequest(`/projects/user/${userId}?page=${page}&size=${size}`);
+}
+
 // ===== ЗАГРУЗКА ФАЙЛА =====
 async function uploadFile(file) {
     const formData = new FormData();
@@ -577,6 +581,165 @@ async function createProjectData(projectData) {
         method: 'POST',
         body: JSON.stringify(projectData)
     });
+}
+
+// ===== ЗАГРУЗКА ДЕТАЛЕЙ ПРОЕКТА =====
+async function loadProjectDetail(projectId) {
+    console.log('🔵 loadProjectDetail вызвана, projectId:', projectId);
+
+    const container = document.getElementById('projectDetail');
+    if (!container) {
+        console.error('❌ Элемент projectDetail не найден');
+        return;
+    }
+
+    try {
+        container.innerHTML = `
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Загрузка...
+            </div>
+        `;
+
+        // 1. Получаем проект
+        const project = await getProject(projectId);
+        console.log('📦 Детали проекта:', project);
+
+        // 2. Получаем владельца
+        let owner = null;
+        try {
+            owner = await getUserById(project.user_id);
+            console.log('👤 Владелец:', owner);
+        } catch (e) {
+            console.warn('⚠️ Не удалось загрузить владельца');
+        }
+
+        // Статус
+        const statusMap = {
+            'pending': '⏳ В очереди',
+            'processing': '🔄 Рендеринг...',
+            'rendering': '🔄 Рендеринг...',
+            'completed': '✅ Готов',
+            'failed': '❌ Ошибка'
+        };
+        const statusText = statusMap[project.status] || project.status || 'Неизвестно';
+        const statusClass = project.status || 'pending';
+
+        // Видимость
+        const visibilityText = project.visibility === 'private' ? '🔒 Приватный' : '🌍 Публичный';
+        const visibilityClass = project.visibility === 'private' ? 'badge-private' : 'badge-public';
+
+        // Рендер
+        const renderUrl = project.render?.url || null;
+        const isRendered = renderUrl !== null && project.status === 'completed';
+
+        // GLB
+        const glbUrl = project.url || null;
+        const glbName = glbUrl ? glbUrl.split('/').pop().split('?')[0] : 'model.glb';
+
+        // Информация о владельце
+        const ownerName = owner ? owner.username : `Пользователь #${project.user_id}`;
+        const ownerFullName = owner ? `${owner.name} ${owner.surname}` : '';
+        const ownerId = owner ? owner.id : project.user_id;
+
+        container.innerHTML = `
+            <div class="project-detail-content">
+                <!-- Шапка -->
+                <div class="project-detail-header">
+                    <h1>${project.name || 'Без названия'}</h1>
+                    <div class="project-detail-meta">
+                        <span class="badge ${visibilityClass}">${visibilityText}</span>
+                        <span class="status-badge status-${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+
+                <div class="project-detail-body">
+                    <!-- Левая колонка -->
+                    <div class="project-detail-left">
+                        <!-- Описание -->
+                        <div class="detail-section">
+                            <h3>📝 Описание</h3>
+                            <p>${project.description || 'Нет описания'}</p>
+                        </div>
+
+                        <!-- Файлы -->
+                        <div class="detail-section">
+                            <h3>📁 Файлы</h3>
+                            <div class="file-item">
+                                <i class="fas fa-file-archive"></i>
+                                <span>${glbName}</span>
+                                ${glbUrl ? `<a href="${glbUrl}" class="btn btn-sm btn-secondary" download>
+                                    <i class="fas fa-download"></i> Скачать GLB
+                                </a>` : '<span class="file-missing">Файл недоступен</span>'}
+                            </div>
+                            <div class="file-item">
+                                <i class="fas fa-image"></i>
+                                <span>${project.render?.file?.name || 'Рендер'}</span>
+                                ${isRendered && renderUrl ? 
+                                    `<a href="${renderUrl}" class="btn btn-sm btn-primary" target="_blank">
+                                        <i class="fas fa-eye"></i> Смотреть
+                                    </a>` : 
+                                    `<span class="file-missing">${project.status === 'rendering' ? '⏳ Рендерится...' : 'Не готов'}</span>`
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Настройки рендера -->
+                        ${project.render ? `
+                        <div class="detail-section">
+                            <h3>⚙️ Настройки рендера</h3>
+                            <ul class="render-settings-list">
+                                <li><span>Разрешение</span> <span>${project.render.width || '—'} × ${project.render.height || '—'}</span></li>
+                                <li><span>Сэмплы</span> <span>${project.render.samples || '—'}</span></li>
+                                <li><span>Денойзер</span> <span>${project.render.denoiser ? 'Включен' : 'Выключен'}</span></li>
+                                <li><span>GPU</span> <span>${project.render.gpu ? 'Включен' : 'Выключен'}</span></li>
+                            </ul>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Правая колонка -->
+                    <div class="project-detail-right">
+                        <!-- Владелец (теперь сверху) -->
+                        <div class="owner-card" onclick="window.location.href='profile.html?id=${ownerId}'">
+                            <div class="owner-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="owner-info">
+                                <div class="owner-name">${ownerFullName || ownerName}</div>
+                                <div class="owner-username">@${ownerName}</div>
+                                <div class="owner-hint">Нажмите для просмотра профиля →</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Превью -->
+                        <div class="render-preview">
+                            <h3>Результат</h3>
+                            ${isRendered && renderUrl ? 
+                                `<img src="${renderUrl}" alt="Render" class="render-image">` :
+                                `<div class="no-render">
+                                    <i class="fas fa-image"></i>
+                                    <p>${project.status === 'rendering' ? '⏳ Рендерится...' : 'Рендер не готов'}</p>
+                                    ${project.status === 'rendering' ? '<small>Обновите страницу через несколько минут</small>' : ''}
+                                </div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('❌ Ошибка загрузки проекта:', error);
+        container.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Ошибка загрузки проекта: ${error.message}</p>
+                <button onclick="history.back()" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад
+                </button>
+            </div>
+        `;
+    }
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ =====
@@ -623,8 +786,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== ЗАГРУЗКА ПРОФИЛЯ =====
     if (currentPage === 'profile.html') {
-        console.log('👤 Загрузка профиля');
-        loadProfile();
+        const params = new URLSearchParams(window.location.search);
+        const userId = params.get('id');
+        const page = parseInt(params.get('page')) || 1;
+        profilePage = page;
+        if (userId) {
+            loadProfile(userId, page);
+        } else {
+            loadProfile(null, page);
+        }
     }
 
     // ===== АВАТАРКА И ДРОПДАУН =====
@@ -812,187 +982,209 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== ЗАГРУЗКА ПРОЕКТА =====
     if (currentPage === 'project.html') {
+        console.log('🔵 Мы на project.html');
         const params = new URLSearchParams(window.location.search);
         const projectId = params.get('id');
+        console.log('🔵 projectId из URL:', projectId);
         if (projectId) {
+            console.log('🔵 Вызываю loadProjectDetail с ID:', projectId);
             loadProjectDetail(projectId);
+        } else {
+            console.error('❌ projectId не найден в URL');
+            document.getElementById('projectDetail').innerHTML = `
+                <div class="error-message">
+                    <p>ID проекта не указан</p>
+                    <a href="index.html" class="btn btn-primary">На главную</a>
+                </div>
+            `;
         }
     }
 });
 
-// ===== ЗАГРУЗКА ДЕТАЛЕЙ ПРОЕКТА =====
-async function loadProjectDetail(projectId) {
-    const container = document.getElementById('projectDetail');
-    if (!container) return;
 
-    try {
-        showLoading('projectDetail');
-        const project = await getProject(projectId);
 
-        container.innerHTML = `
-            <div class="project-detail-content">
-                <div class="project-detail-header">
-                    <h1>${project.name}</h1>
-                    <div class="project-detail-meta">
-                        <span class="badge ${project.visibility === 'private' ? 'badge-private' : 'badge-public'}">
-                            ${project.visibility === 'private' ? '🔒 Приватный' : '🌍 Публичный'}
-                        </span>
-                        <span class="project-status">Статус: ${project.status || 'Готов'}</span>
-                    </div>
-                </div>
+// ===== ЗАГРУЗКА ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ =====
+let profilePage = 1;
+const PROFILE_PAGE_SIZE = 10;
 
-                <div class="project-detail-body">
-                    <div class="project-detail-left">
-                        <div class="project-description">
-                            <h3>📝 Описание</h3>
-                            <p>${project.description || 'Нет описания'}</p>
-                        </div>
-
-                        <div class="project-files">
-                            <h3>📁 Файлы</h3>
-                            <div class="file-item">
-                                <i class="fas fa-file-archive"></i>
-                                <span>Исходный GLB: ${project.file_name || 'model.glb'}</span>
-                                <a href="${project.file_url}" class="btn btn-sm btn-secondary" download>
-                                    <i class="fas fa-download"></i> Скачать
-                                </a>
-                            </div>
-                            <div class="file-item">
-                                <i class="fas fa-image"></i>
-                                <span>Рендер: ${project.render_file_name || 'render.png'}</span>
-                                <a href="${project.render_url}" class="btn btn-sm btn-primary" target="_blank">
-                                    <i class="fas fa-eye"></i> Просмотреть
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="project-render-settings">
-                            <h3>⚙️ Настройки рендера</h3>
-                            <ul>
-                                <li><strong>Качество:</strong> ${project.settings?.quality || 'medium'}</li>
-                                <li><strong>Разрешение:</strong> ${project.settings?.resolution || '1024'}x${project.settings?.resolution || '1024'}</li>
-                                <li><strong>Фон:</strong> ${project.settings?.background || 'black'}</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="project-detail-right">
-                        <div class="render-preview">
-                            <h3>🖼️ Результат рендера</h3>
-                            ${project.render_url ? 
-                                `<img src="${project.render_url}" alt="Render" class="render-image">` :
-                                `<div class="no-render">
-                                    <i class="fas fa-image"></i>
-                                    <p>Рендер еще не готов</p>
-                                </div>`
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-detail-footer">
-                    <div class="project-author-info" onclick="window.location.href='profile.html?id=${project.author_id}'">
-                        <h3>👤 Владелец</h3>
-                        <div class="author-card">
-                            <div class="author-avatar">
-                                ${project.author?.avatar ? 
-                                    `<img src="${project.author.avatar}" alt="${project.author.username}">` :
-                                    `<i class="fas fa-user-circle"></i>`
-                                }
-                            </div>
-                            <div class="author-details">
-                                <strong>${project.author?.username || 'Аноним'}</strong>
-                                <small>${project.author?.email || ''}</small>
-                                <span class="click-hint">Нажмите для просмотра профиля →</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    } catch (error) {
-        container.innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Ошибка загрузки проекта: ${error.message}</p>
-                <button onclick="history.back()" class="btn btn-secondary">Назад</button>
-            </div>
-        `;
-    }
-}
-
-// ===== ЗАГРУЗКА ПРОФИЛЯ =====
-async function loadProfile() {
+async function loadProfile(userId = null, page = 1) {
     const container = document.getElementById('profileContent');
     if (!container) return;
 
     try {
         showLoading('profileContent');
-        const user = await getCurrentUserProfile();
-        console.log('👤 Профиль пользователя:', user);
+
+        let user;
+        let isOwnProfile = false;
+
+        if (userId) {
+            user = await getUserById(userId);
+            console.log('👤 Профиль пользователя (чужой):', user);
+            isOwnProfile = false;
+        } else {
+            user = await getCurrentUserProfile();
+            console.log('👤 Мой профиль:', user);
+            isOwnProfile = true;
+        }
+
+        // Загружаем проекты пользователя с пагинацией
+        const projectsData = await getUserProjectsById(user.id, page, PROFILE_PAGE_SIZE);
+        console.log('📦 Проекты пользователя:', projectsData);
+
+        const allProjects = projectsData.project_list || [];
+        const total = projectsData.total || allProjects.length;
+
+        // Определяем количество страниц
+        let totalPages = 1;
+        if (projectsData.total_pages) {
+            totalPages = projectsData.total_pages;
+        } else if (projectsData.total) {
+            totalPages = Math.ceil(projectsData.total / PROFILE_PAGE_SIZE);
+        } else if (allProjects.length === PROFILE_PAGE_SIZE) {
+            totalPages = page + 1;
+        } else {
+            totalPages = page;
+        }
+
+        // ВАЖНО: создаем переменную projects для использования в HTML
+        const projects = allProjects.slice(0, PROFILE_PAGE_SIZE);
+
+        console.log(`📄 Всего страниц: ${totalPages}, текущая: ${page}, показано проектов: ${projects.length}`);
 
         container.innerHTML = `
-            <div class="profile-card">
-                <div class="profile-header">
-                    <div class="profile-avatar-large">
-                        <i class="fas fa-user-circle"></i>
+            <div class="profile-page">
+                <!-- Карточка пользователя -->
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar-large">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h1>${user.username}</h1>
+                            <p class="profile-name">${user.name} ${user.surname}</p>
+                            ${isOwnProfile ? `<p class="profile-email"><i class="fas fa-envelope"></i> ${user.email}</p>` : ''}
+                            <p class="profile-date">
+                                <i class="fas fa-calendar"></i> 
+                                Зарегистрирован: ${new Date(user.registration_date).toLocaleDateString('ru-RU')}
+                            </p>
+                            <div class="profile-stats">
+                                <span><i class="fas fa-project-diagram"></i> ${projectsData.total || projects.length} проектов</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="profile-info">
-                        <h1>${user.username}</h1>
-                        <p class="profile-name">${user.name} ${user.surname}</p>
-                        <p class="profile-email"><i class="fas fa-envelope"></i> ${user.email}</p>
-                        <p class="profile-date">
-                            <i class="fas fa-calendar"></i> 
-                            Зарегистрирован: ${new Date(user.registration_date).toLocaleDateString('ru-RU')}
-                        </p>
+
+                    ${isOwnProfile ? `
+                    <div class="profile-actions">
+                        <button class="btn btn-primary" onclick="editProfile()">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteAccount()">
+                            <i class="fas fa-trash"></i> Удалить аккаунт
+                        </button>
                     </div>
+
+                    <div id="editForm" style="display:none;" class="edit-form">
+                        <h3>✏️ Редактировать профиль</h3>
+                        <form id="updateProfileForm">
+                            <div class="form-group">
+                                <label>Фамилия</label>
+                                <input type="text" id="editSurname" value="${user.surname}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Имя</label>
+                                <input type="text" id="editName" value="${user.name}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Имя пользователя</label>
+                                <input type="text" id="editUsername" value="${user.username}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="editEmail" value="${user.email}" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Сохранить
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
+                                    <i class="fas fa-times"></i> Отмена
+                                </button>
+                            </div>
+                        </form>
+                        <div id="updateError" class="error-message" style="display:none;"></div>
+                        <div id="updateSuccess" class="success-message" style="display:none;"></div>
+                    </div>
+                    ` : `
+                    <div class="profile-actions">
+                        <span class="profile-note">Публичный профиль</span>
+                    </div>
+                    `}
                 </div>
 
-                <div class="profile-actions">
-                    <button class="btn btn-primary" onclick="editProfile()">
-                        <i class="fas fa-edit"></i> Редактировать
-                    </button>
-                    <button class="btn btn-danger" onclick="deleteAccount()">
-                        <i class="fas fa-trash"></i> Удалить аккаунт
-                    </button>
-                </div>
-
-                <!-- Форма редактирования (скрыта по умолчанию) -->
-                <div id="editForm" style="display:none;" class="edit-form">
-                    <h3>✏️ Редактировать профиль</h3>
-                    <form id="updateProfileForm">
-                        <div class="form-group">
-                            <label>Фамилия</label>
-                            <input type="text" id="editSurname" value="${user.surname}" required>
+                <!-- Проекты пользователя -->
+                <div class="profile-projects-section">
+                    <h2>📦 Проекты пользователя</h2>
+                    ${projects.length > 0 ? `
+                        <div class="projects-grid">
+                            ${projects.map(p => renderProjectCard(p)).join('')}
                         </div>
-                        <div class="form-group">
-                            <label>Имя</label>
-                            <input type="text" id="editName" value="${user.name}" required>
+                    ` : `
+                        <div class="empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <p>У пользователя нет проектов</p>
                         </div>
-                        <div class="form-group">
-                            <label>Имя пользователя</label>
-                            <input type="text" id="editUsername" value="${user.username}" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="editEmail" value="${user.email}" required>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Сохранить
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
-                                <i class="fas fa-times"></i> Отмена
-                            </button>
-                        </div>
-                    </form>
-                    <div id="updateError" class="error-message" style="display:none;"></div>
-                    <div id="updateSuccess" class="success-message" style="display:none;"></div>
+                    `}
+                    
+                    <!-- Пагинация -->
+                    ${totalPages > 1 ? `
+                    <div class="pagination" id="profilePagination">
+                        <button class="btn btn-secondary" id="profilePrevPage" ${page <= 1 ? 'disabled' : ''}>
+                            <i class="fas fa-chevron-left"></i> Назад
+                        </button>
+                        <button class="btn btn-secondary" id="profileNextPage" ${page >= totalPages ? 'disabled' : ''}>
+                            Вперед <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
         `;
 
-        // Обработчик обновления профиля
+        // Клики на проекты
+        document.querySelectorAll('.project-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const id = card.dataset.id;
+                window.location.href = `project.html?id=${id}`;
+            });
+        });
+
+        // ===== ПАГИНАЦИЯ В ПРОФИЛЕ =====
+        const prevBtn = document.getElementById('profilePrevPage');
+        const nextBtn = document.getElementById('profileNextPage');
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (page > 1) {
+                    const newPage = page - 1;
+                    profilePage = newPage;
+                    loadProfile(userId, newPage);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (page < totalPages) {
+                    const newPage = page + 1;
+                    profilePage = newPage;
+                    loadProfile(userId, newPage);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        }
+
+        // Обработчик обновления профиля (только для своего профиля)
         const updateForm = document.getElementById('updateProfileForm');
         if (updateForm) {
             updateForm.addEventListener('submit', async (e) => {
@@ -1006,7 +1198,6 @@ async function loadProfile() {
                 const errorDiv = document.getElementById('updateError');
                 const successDiv = document.getElementById('updateSuccess');
 
-                // Валидация
                 if (!surname || !name || !username || !email) {
                     errorDiv.style.display = 'block';
                     errorDiv.textContent = 'Все поля обязательны для заполнения';
@@ -1032,7 +1223,6 @@ async function loadProfile() {
             });
         }
 
-        // Настройка дропдауна
         setupDropdown();
 
     } catch (error) {
@@ -1041,7 +1231,7 @@ async function loadProfile() {
             <div class="error-message">
                 <i class="fas fa-exclamation-circle"></i>
                 <p>Ошибка загрузки профиля: ${error.message}</p>
-                <button onclick="loadProfile()" class="btn btn-secondary">
+                <button onclick="loadProfile(${userId || ''})" class="btn btn-secondary">
                     <i class="fas fa-redo"></i> Повторить
                 </button>
             </div>
