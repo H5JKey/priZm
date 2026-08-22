@@ -60,12 +60,19 @@ class ProjectRepository(AbstractProjectRepository):
     async def get_user_public_projects(
         self,
         user_id: int,
+        size: int,
+        page: int,
     ) -> list[Project]:
-        stmt = select(Project).filter(
-            and_(
-                Project.user_id == user_id,
-                Project.visibility == ProjectVisibility.public.value,
-            ),
+        stmt = (
+            select(Project)
+            .filter(
+                and_(
+                    Project.user_id == user_id,
+                    Project.visibility == ProjectVisibility.public.value,
+                ),
+            )
+            .limit(size)
+            .offset(size * (page - 1))
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
