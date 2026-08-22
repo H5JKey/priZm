@@ -544,6 +544,26 @@ async function getUserProjectsById(userId, page = 1, size = 10) {
     return await apiRequest(`/projects/user/${userId}?page=${page}&size=${size}`);
 }
 
+// ===== РЕДАКТИРОВАНИЕ ПРОЕКТА =====
+function toggleEditProject(projectId) {
+    const form = document.getElementById('editProjectForm');
+    if (form) {
+        if (form.style.display === 'none' || form.style.display === '') {
+            form.style.display = 'block';
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            form.style.display = 'none';
+        }
+    }
+}
+
+function cancelEditProject() {
+    const form = document.getElementById('editProjectForm');
+    if (form) {
+        form.style.display = 'none';
+    }
+}
+
 // ===== ЗАГРУЗКА ФАЙЛА =====
 async function uploadFile(file) {
     const formData = new FormData();
@@ -604,11 +624,23 @@ async function loadProjectDetail(projectId) {
         const project = await getProject(projectId);
         console.log('📦 Детали проекта:', project);
 
-        // 2. Получаем владельца
+        // 2. Получаем текущего пользователя
+        let currentUser = null;
+        let isOwner = false;
+        try {
+            currentUser = await getCurrentUserProfile();
+            isOwner = currentUser && currentUser.id === project.user_id;
+            console.log('👤 Текущий пользователь:', currentUser);
+            console.log('🔑 Владелец:', isOwner);
+        } catch (e) {
+            console.warn('⚠️ Не удалось загрузить текущего пользователя');
+        }
+
+        // 3. Получаем владельца проекта
         let owner = null;
         try {
             owner = await getUserById(project.user_id);
-            console.log('👤 Владелец:', owner);
+            console.log('👤 Владелец проекта:', owner);
         } catch (e) {
             console.warn('⚠️ Не удалось загрузить владельца');
         }
@@ -645,12 +677,53 @@ async function loadProjectDetail(projectId) {
             <div class="project-detail-content">
                 <!-- Шапка -->
                 <div class="project-detail-header">
-                    <h1>${project.name || 'Без названия'}</h1>
+                    <div class="project-detail-header-top">
+                        <h1>${project.name || 'Без названия'}</h1>
+                        ${isOwner ? `
+                            <button class="btn btn-secondary" onclick="toggleEditProject(${project.id})">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </button>
+                        ` : ''}
+                    </div>
                     <div class="project-detail-meta">
                         <span class="badge ${visibilityClass}">${visibilityText}</span>
                         <span class="status-badge status-${statusClass}">${statusText}</span>
                     </div>
                 </div>
+
+                <!-- Форма редактирования (скрыта по умолчанию) -->
+                ${isOwner ? `
+                <div id="editProjectForm" style="display:none;" class="edit-project-form">
+                    <h3>✏️ Редактировать проект</h3>
+                    <form id="updateProjectForm">
+                        <div class="form-group">
+                            <label>Название</label>
+                            <input type="text" id="editProjectName" value="${project.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Описание</label>
+                            <textarea id="editProjectDescription" rows="3">${project.description || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Доступ</label>
+                            <select id="editProjectVisibility">
+                                <option value="public" ${project.visibility === 'public' ? 'selected' : ''}>Публичный</option>
+                                <option value="private" ${project.visibility === 'private' ? 'selected' : ''}>Приватный</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Сохранить
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEditProject()">
+                                <i class="fas fa-times"></i> Отмена
+                            </button>
+                        </div>
+                    </form>
+                    <div id="updateProjectError" class="error-message" style="display:none;"></div>
+                    <div id="updateProjectSuccess" class="success-message" style="display:none;"></div>
+                </div>
+                ` : ''}
 
                 <div class="project-detail-body">
                     <!-- Левая колонка -->
@@ -690,8 +763,8 @@ async function loadProjectDetail(projectId) {
                             <ul class="render-settings-list">
                                 <li><span>Разрешение</span> <span>${project.render.width || '—'} × ${project.render.height || '—'}</span></li>
                                 <li><span>Сэмплы</span> <span>${project.render.samples || '—'}</span></li>
-                                <li><span>Денойзер</span> <span>${project.render.denoiser ? 'Включен' : 'Выключен'}</span></li>
-                                <li><span>GPU</span> <span>${project.render.gpu ? 'Включен' : 'Выключен'}</span></li>
+                                <li><span>Денойзер</span> <span>${project.render.denoiser ? '✅ Включен' : '❌ Выключен'}</span></li>
+                                <li><span>GPU</span> <span>${project.render.gpu ? '✅ Включен' : '❌ Выключен'}</span></li>
                             </ul>
                         </div>
                         ` : ''}
@@ -699,7 +772,20 @@ async function loadProjectDetail(projectId) {
 
                     <!-- Правая колонка -->
                     <div class="project-detail-right">
-                        <!-- Владелец (теперь сверху) -->
+                        <!-- Превью -->
+                        <div class="render-preview">
+                            <h3>🖼️ Результат</h3>
+                            ${isRendered && renderUrl ? 
+                                `<img src="${renderUrl}" alt="Render" class="render-image">` :
+                                `<div class="no-render">
+                                    <i class="fas fa-image"></i>
+                                    <p>${project.status === 'rendering' ? '⏳ Рендерится...' : 'Рендер не готов'}</p>
+                                    ${project.status === 'rendering' ? '<small>Обновите страницу через несколько минут</small>' : ''}
+                                </div>`
+                            }
+                        </div>
+                        
+                        <!-- Владелец -->
                         <div class="owner-card" onclick="window.location.href='profile.html?id=${ownerId}'">
                             <div class="owner-avatar">
                                 <i class="fas fa-user-circle"></i>
@@ -710,23 +796,48 @@ async function loadProjectDetail(projectId) {
                                 <div class="owner-hint">Нажмите для просмотра профиля →</div>
                             </div>
                         </div>
-                        
-                        <!-- Превью -->
-                        <div class="render-preview">
-                            <h3>Результат</h3>
-                            ${isRendered && renderUrl ? 
-                                `<img src="${renderUrl}" alt="Render" class="render-image">` :
-                                `<div class="no-render">
-                                    <i class="fas fa-image"></i>
-                                    <p>${project.status === 'rendering' ? '⏳ Рендерится...' : 'Рендер не готов'}</p>
-                                    ${project.status === 'rendering' ? '<small>Обновите страницу через несколько минут</small>' : ''}
-                                </div>`
-                            }
-                        </div>
                     </div>
                 </div>
             </div>
         `;
+
+        // ===== ОБРАБОТЧИК ОБНОВЛЕНИЯ ПРОЕКТА =====
+        const updateProjectForm = document.getElementById('updateProjectForm');
+        if (updateProjectForm) {
+            updateProjectForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const name = document.getElementById('editProjectName').value.trim();
+                const description = document.getElementById('editProjectDescription').value.trim();
+                const visibility = document.getElementById('editProjectVisibility').value;
+
+                const errorDiv = document.getElementById('updateProjectError');
+                const successDiv = document.getElementById('updateProjectSuccess');
+
+                if (!name) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = 'Введите название проекта';
+                    return;
+                }
+
+                try {
+                    errorDiv.style.display = 'none';
+                    successDiv.style.display = 'none';
+
+                    await updateProject(projectId, name, description, visibility);
+
+                    successDiv.style.display = 'block';
+                    successDiv.textContent = '✅ Проект успешно обновлен!';
+
+                    setTimeout(() => {
+                        loadProjectDetail(projectId);
+                    }, 1500);
+                } catch (error) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = error.message || 'Ошибка обновления проекта';
+                }
+            });
+        }
 
     } catch (error) {
         console.error('❌ Ошибка загрузки проекта:', error);
@@ -740,6 +851,17 @@ async function loadProjectDetail(projectId) {
             </div>
         `;
     }
+}
+// ===== ОБНОВЛЕНИЕ ПРОЕКТА =====
+async function updateProject(projectId, name, description, visibility) {
+    return await apiRequest(`/projects/${projectId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+            name: name,
+            description: description,
+            visibility: visibility
+        })
+    });
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ =====

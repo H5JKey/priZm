@@ -1265,3 +1265,36 @@ a {
     font-size: 14px;
     padding: 0 12px;
 }
+
+/* ===== РЕДАКТИРОВАНИЕ ПРОЕКТА ===== */
+.project-detail-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.project-detail-header-top h1 {
+    margin: 0;
+    flex: 1;
+}
+
+.edit-project-form {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e8ecf1;
+}
+
+.edit-project-form h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+}
+
+.edit-project-form .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
