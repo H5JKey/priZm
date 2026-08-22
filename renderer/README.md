@@ -19,19 +19,6 @@
 
 ---
 
-## Key features:
-- **GLSL compute shaders for path tracing**
-- **Physically based rendering**
-- **EGL for headless rendering**
-- **glTF 2.0 loading**
-- **Open Image Denoiser**
-- **Debug images output: raw, albedo, normals**
-- **Logging system**
-- **Unit tests with googleTest**
-- **Docker ready**
-
----
-
 ## Build Options
 
 ### Build Modes
@@ -107,6 +94,8 @@ docker run --rm renderer renderer_cli <width> <height> <samples> <input_scene> [
 ---
 
 ## 2. Worker version
+> [!IMPORTANT] 
+Unlike CLI version, worker can operate only .glb files
 
 ### Build
 
@@ -169,6 +158,49 @@ The worker can be configured to generate preview images. When preview mode is en
     <td><img src="images/preview.png" alt="Preview mode" width="400"></td>
   </tr>
 </table>
+
+
+### Task format
+
+The renderer worker communicates with other services through JSON messages passed via Kafka.
+
+#### Input
+
+```JSON
+{
+  "project_id": 67,
+  "input": {
+    "bucket": "input",
+    "key": "test.glb"
+  },
+  "output": {
+    "bucket": "output"
+  },
+  "render": {
+    "width": 1920,
+    "height": 1080,
+    "samples": 128,
+    "background": [0.7, 0.7, 0.95],
+    "sun": {
+      "direction": [1.0, 1.0, 0.0],
+      "color": [20.0, 20.0, 20.0],
+      "exponent": 128
+    }
+  }
+}
+```
+
+#### Output
+
+```JSON
+{
+  "project_id": 67,
+  "output": {
+    "bucket": "output",
+    "key": "result.png"
+  }
+}
+```
 
 ---
 
