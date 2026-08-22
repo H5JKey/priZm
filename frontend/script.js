@@ -314,6 +314,53 @@ async function getProject(id) {
     return await apiRequest(`/projects/${id}`);
 }
 
+// ===== УДАЛЕНИЕ ПРОЕКТА =====
+async function deleteProject(projectId) {
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE}/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        let errorMessage = 'Ошибка удаления';
+        try {
+            const error = await response.json();
+            errorMessage = error.detail || errorMessage;
+        } catch (e) {
+            // Если ответ не JSON
+            const text = await response.text();
+            if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
+    }
+
+    // DELETE может возвращать пустой ответ
+    return null;
+}
+
+// ===== ОБРАБОТЧИК УДАЛЕНИЯ ПРОЕКТА =====
+async function deleteProjectHandler(projectId) {
+    if (!confirm('⚠️ Вы уверены, что хотите удалить этот проект? Это действие необратимо!')) {
+        return;
+    }
+
+    if (!confirm('Еще раз: ВСЕ ДАННЫЕ ПРОЕКТА БУДУТ УДАЛЕНЫ. Продолжить?')) {
+        return;
+    }
+
+    try {
+        await deleteProject(projectId);
+        alert('✅ Проект успешно удален');
+        window.location.href = 'index.html';
+    } catch (error) {
+        alert('❌ Ошибка удаления: ' + error.message);
+    }
+}
+
 async function createProject(formData) {
     const token = getAccessToken();
     const response = await fetch(`${API_BASE}/projects`, {
@@ -675,14 +722,18 @@ async function loadProjectDetail(projectId) {
 
         container.innerHTML = `
             <div class="project-detail-content">
-                <!-- Шапка -->
                 <div class="project-detail-header">
                     <div class="project-detail-header-top">
                         <h1>${project.name || 'Без названия'}</h1>
-                        ${isOwner ? `
-                            <button class="btn btn-secondary" onclick="toggleEditProject(${project.id})">
-                                <i class="fas fa-edit"></i> Редактировать
-                            </button>
+                        ${currentUser && currentUser.id === project.user_id ? `
+                            <div class="project-actions">
+                                <button class="btn btn-secondary" onclick="toggleEditProject(${project.id})">
+                                    <i class="fas fa-edit"></i> Редактировать
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteProjectHandler(${project.id})">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </button>
+                            </div>
                         ` : ''}
                     </div>
                     <div class="project-detail-meta">
@@ -690,6 +741,8 @@ async function loadProjectDetail(projectId) {
                         <span class="status-badge status-${statusClass}">${statusText}</span>
                     </div>
                 </div>
+                
+                
 
                 <!-- Форма редактирования (скрыта по умолчанию) -->
                 ${isOwner ? `
