@@ -14,8 +14,6 @@ class Config {
     std::optional<std::string> s3Host_;
     std::optional<std::string> s3AccessKey_;
     std::optional<std::string> s3SecretKey_;
-    std::optional<std::string> s3BucketInput_;
-    std::optional<std::string> s3BucketOutput_;
     Logger::Level logLevel_ = Logger::Level::INFO;  // default
     bool logDebug_ = false;                         // default
     bool preview_ = false;                          // default
@@ -35,8 +33,6 @@ class Config {
     std::string s3Host() const;
     std::string s3AccessKey() const;
     std::string s3SecretKey() const;
-    std::string s3BucketInput() const;
-    std::string s3BucketOutput() const;
     Logger::Level logLevel() const;
     bool logDebug() const;
     bool preview() const;

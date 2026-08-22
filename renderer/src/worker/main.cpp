@@ -55,7 +55,7 @@ int main() try {
         json inputJson;
         int width, height, samples;
         int project_id;
-        std::string bucket, key;
+        std::string inputBucket, outputBucket, inputKey;
         std::string modelName;
         try {
             logger.info(std::format("Listening for messages..."));
@@ -67,14 +67,17 @@ int main() try {
                 height = inputJson["render"]["height"];
                 samples = inputJson["render"]["samples"];
                 project_id = inputJson["project_id"];
-                bucket = inputJson["file"]["bucket"];
-                key = inputJson["file"]["key"];
+
+                inputBucket = inputJson["input"]["bucket"];
+                inputKey = inputJson["input"]["key"];
+
+                outputBucket = inputJson["output"]["bucket"];
             } catch (const std::exception& e) {
                 logger.error(std::format("Failed to parse json from string: {}. Error: {}", message, e.what()));
                 throw;
             }
             std::vector<uint8_t> data;
-            data = s3client.getData(bucket, key);
+            data = s3client.getData(inputBucket, inputKey);
 
             Scene scene = sceneLoader.loadGltfFromMemory(data);
             scene.setBackground(glm::vec3(0.53, 0.81, 0.92));
@@ -83,7 +86,7 @@ int main() try {
                 output = std::move(renderPipeline(engine, scene, 200, 200 * (static_cast<float>(height) / width), 5));
             else
                 output = std::move(renderPipeline(engine, scene, width, height, samples));
-            std::string outputKey = key;
+            std::string outputKey = inputKey;
             auto dotPos = outputKey.rfind('.');
             if (dotPos != std::string::npos) {
                 outputKey = outputKey.substr(0, dotPos);
@@ -93,13 +96,13 @@ int main() try {
             else
                 outputKey += ".png";
 
-            s3client.putData(output, config.s3BucketOutput(), outputKey);
+            s3client.putData(output, outputBucket, outputKey);
 
             json outputJson;
             try {
                 outputJson["project_id"] = project_id;
-                outputJson["file"] = {
-                    {"bucket", config.s3BucketOutput()},
+                outputJson["output"] = {
+                    {"bucket", outputBucket},
                     {"key", outputKey},
                 };
             } catch (const std::exception& e) {

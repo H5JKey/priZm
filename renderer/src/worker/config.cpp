@@ -13,8 +13,6 @@ void Config::apply(env::dotenv dotenv) {
         if (dotenv.hasVariable("S3_HOST")) s3Host_ = dotenv["S3_HOST"];
         if (dotenv.hasVariable("S3_ACCESS_KEY")) s3AccessKey_ = dotenv["S3_ACCESS_KEY"];
         if (dotenv.hasVariable("S3_SECRET_KEY")) s3SecretKey_ = dotenv["S3_SECRET_KEY"];
-        if (dotenv.hasVariable("S3_BUCKET_INPUT")) s3BucketInput_ = dotenv["S3_BUCKET_INPUT"];
-        if (dotenv.hasVariable("S3_BUCKET_OUTPUT")) s3BucketOutput_ = dotenv["S3_BUCKET_OUTPUT"];
         if (dotenv.hasVariable("RENDERER_LOG_LEVEL"))
             logLevel_ = Logger::getLevelFromString(dotenv["RENDERER_LOG_LEVEL"]);
         if (dotenv.hasVariable("RENDERER_LOG_DEBUG")) logDebug_ = dotenv["RENDERER_LOG_DEBUG"];
@@ -35,8 +33,6 @@ void Config::fromEnvironment() {
         if (char* ptr = std::getenv("S3_HOST")) s3Host_ = env::Value(ptr);
         if (char* ptr = std::getenv("S3_ACCESS_KEY")) s3AccessKey_ = env::Value(ptr);
         if (char* ptr = std::getenv("S3_SECRET_KEY")) s3SecretKey_ = env::Value(ptr);
-        if (char* ptr = std::getenv("S3_BUCKET_INPUT")) s3BucketInput_ = env::Value(ptr);
-        if (char* ptr = std::getenv("S3_BUCKET_OUTPUT")) s3BucketOutput_ = env::Value(ptr);
         if (char* ptr = std::getenv("RENDERER_LOG_LEVEL")) logLevel_ = Logger::getLevelFromString(env::Value(ptr));
         if (char* ptr = std::getenv("RENDERER_LOG_DEBUG")) logDebug_ = env::Value(ptr);
         if (char* ptr = std::getenv("RENDERER_PREVIEW")) preview_ = env::Value(ptr);
@@ -99,18 +95,7 @@ std::string Config::s3SecretKey() const {
     }
     return s3SecretKey_.value();
 }
-std::string Config::s3BucketInput() const {
-    if (!s3BucketInput_.has_value()) {
-        throw std::runtime_error("S3_BUCKET_INPUT not configured");
-    }
-    return s3BucketInput_.value();
-}
-std::string Config::s3BucketOutput() const {
-    if (!s3BucketOutput_.has_value()) {
-        throw std::runtime_error("S3_BUCKET_OUTPUT not configured");
-    }
-    return s3BucketOutput_.value();
-}
+
 Logger::Level Config::logLevel() const { return logLevel_; }
 bool Config::logDebug() const { return logDebug_; }
 bool Config::preview() const { return preview_; }
