@@ -75,13 +75,15 @@ int main() try {
 
                 outputBucket = inputJson["output"]["bucket"];
 
-                background = glm::vec3(inputJson["background"].at(0), inputJson["background"].at(1),
-                                       inputJson["background"].at(2));
-                sun.direction = glm::vec3(inputJson["sun"]["direction"].at(0), inputJson["sun"]["direction"].at(1),
-                                          inputJson["sun"]["direction"].at(2));
-                sun.color = glm::vec3(inputJson["sun"]["color"].at(0), inputJson["sun"]["color"].at(1),
-                                      inputJson["sun"]["color"].at(2));
-                sun.exponent = inputJson["sun"]["exponent"];
+                background = glm::vec3(inputJson["render"]["background"].at(0), inputJson["render"]["background"].at(1),
+                                       inputJson["render"]["background"].at(2));
+                sun.direction = glm::vec3(inputJson["render"]["sun"]["direction"].at(0),
+                                          inputJson["render"]["sun"]["direction"].at(1),
+                                          inputJson["render"]["sun"]["direction"].at(2));
+                sun.color =
+                    glm::vec3(inputJson["render"]["sun"]["color"].at(0), inputJson["render"]["sun"]["color"].at(1),
+                              inputJson["render"]["sun"]["color"].at(2));
+                sun.exponent = inputJson["render"]["sun"]["exponent"];
             } catch (const std::exception& e) {
                 logger.error(std::format("Failed to parse json from string: {}. Error: {}", message, e.what()));
                 throw;
