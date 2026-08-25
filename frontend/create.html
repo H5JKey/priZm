@@ -6,6 +6,9 @@
     <title>Создать проект — 3D Render</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Подключаем Three.js и OrbitControls -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
     <header class="header">
@@ -45,7 +48,7 @@
         <div class="container">
             <div class="page-header">
                 <h1><i class="fas fa-plus-circle"></i> Создать новый проект</h1>
-                <p class="subtitle">Загрузите GLB-файл и настройте параметры рендера</p>
+                <p class="subtitle">Загрузите GLB-файл и настройте параметры</p>
             </div>
 
             <form id="createProjectForm" class="create-form" enctype="multipart/form-data">
@@ -125,6 +128,32 @@
                     </div>
                 </div>
 
+                <!-- Настройка солнца -->
+                <div class="form-section">
+                    <h3>☀️ Положение солнца</h3>
+                    <p style="color: #888; font-size: 14px; margin-bottom: 12px;">
+                        Перетащите мышкой по шару, чтобы выбрать положение солнца
+                    </p>
+                    <div id="sunSphereContainer" style="width: 100%; height: 600px; border-radius: 12px; overflow: hidden; background: #1a1a2e; cursor: grab;"></div>
+                    <div style="display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 100px;">
+                            <label style="font-size: 13px; color: #666;">X</label>
+                            <input type="text" id="sunX" value="0.00" readonly style="width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #f5f5f5; font-size: 13px;">
+                        </div>
+                        <div style="flex: 1; min-width: 100px;">
+                            <label style="font-size: 13px; color: #666;">Y</label>
+                            <input type="text" id="sunY" value="1.00" readonly style="width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #f5f5f5; font-size: 13px;">
+                        </div>
+                        <div style="flex: 1; min-width: 100px;">
+                            <label style="font-size: 13px; color: #666;">Z</label>
+                            <input type="text" id="sunZ" value="0.00" readonly style="width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #f5f5f5; font-size: 13px;">
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="resetSunPosition()" style="align-self: flex-end;">
+                            <i class="fas fa-undo"></i> Сбросить
+                        </button>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-large">
                     <i class="fas fa-upload"></i> Создать проект
                 </button>
@@ -136,5 +165,388 @@
     </main>
 
     <script src="script.js"></script>
+
+    <script>
+    // ===== 3D ШАР ДЛЯ ВЫБОРА ПОЛОЖЕНИЯ СОЛНЦА =====
+    let sunScene, sunCamera, sunRenderer, sunSphere, sunDot, sunRay;
+    let isDraggingSphere = false;
+    let isDraggingDot = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let cameraDistance = 5;
+    let cameraAngleX = 0.5;
+    let cameraAngleY = 0.8;
+
+    // Для вращения сферы
+    let sphereRotationX = 0;
+    let sphereRotationY = 0;
+
+    function initSunSphere() {
+    const container = document.getElementById('sunSphereContainer');
+    if (!container) return;
+
+    const width = container.clientWidth || 600;
+    const height = container.clientHeight || 300;
+
+    // Сцена
+    sunScene = new THREE.Scene();
+
+    // ===== ГРАДИЕНТНЫЙ ФОН =====
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.width = 2;
+    bgCanvas.height = 256;
+    const bgCtx = bgCanvas.getContext('2d');
+    const gradient = bgCtx.createLinearGradient(0, 0, 0, 256);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(0.5, '#764ba2');
+    gradient.addColorStop(1, '#4a2c7a');
+    bgCtx.fillStyle = gradient;
+    bgCtx.fillRect(0, 0, 2, 256);
+
+    const texture = new THREE.CanvasTexture(bgCanvas);
+    sunScene.background = texture;
+
+    // Камера
+    sunCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    updateCameraPosition();
+
+    // Рендерер
+    sunRenderer = new THREE.WebGLRenderer({ antialias: true });
+    sunRenderer.setSize(width, height);
+    sunRenderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(sunRenderer.domElement);
+
+    // Освещение
+    const ambientLight = new THREE.AmbientLight(0x404060);
+    sunScene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(1, 1, 1);
+    sunScene.add(dirLight);
+
+    // Сфера - создаём группу для правильного вращения
+    const sphereGroup = new THREE.Group();
+    sunScene.add(sphereGroup);
+
+    // Основная сфера
+    const geometry = new THREE.SphereGeometry(1.5, 64, 64);
+    const material = new THREE.MeshPhongMaterial({
+        color: 0x8b5cf6,
+        emissive: 0x4a2c7a,
+        emissiveIntensity: 0.3,
+        shininess: 40,
+        transparent: true,
+        opacity: 0.5,
+        wireframe: false
+    });
+    sunSphere = new THREE.Mesh(geometry, material);
+    sphereGroup.add(sunSphere);
+
+    // Сетка (экватор и меридианы)
+    const gridHelper = new THREE.SphereGeometry(1.51, 24, 24);
+    const wireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x8b5cf6,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.15
+    });
+    const wireframeSphere = new THREE.Mesh(gridHelper, wireframeMaterial);
+    sphereGroup.add(wireframeSphere);
+
+    // Точка на сфере (позиция солнца) - добавляем в группу
+    const dotGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+    const dotMaterial = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+    sunDot = new THREE.Mesh(dotGeometry, dotMaterial);
+    sunDot.position.set(0, 1.5, 0);
+    sphereGroup.add(sunDot);
+
+    // Луч от солнца - добавляем в группу
+    const rayGeometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 2.5, 0)
+    ]);
+    const rayMaterial = new THREE.LineBasicMaterial({
+        color: 0xffaa00,
+        transparent: true,
+        opacity: 0.4
+    });
+    sunRay = new THREE.Line(rayGeometry, rayMaterial);
+    sphereGroup.add(sunRay);
+
+    // Сохраняем группу для вращения
+    window.sphereGroup = sphereGroup;
+
+    // Обновляем координаты
+    updateSunCoordinates(0, 1.5, 0);
+
+    // ===== ОСИ КООРДИНАТ СО СТРЕЛКАМИ =====
+    function createArrow(direction, origin, length, color) {
+        const arrowHelper = new THREE.ArrowHelper(
+            direction.clone().normalize(),
+            origin,
+            length,
+            color,
+            0.2,  // длина головки
+            0.1   // ширина головки
+        );
+        return arrowHelper;
+    }
+
+    // Ось X (красная)
+    const arrowX = createArrow(
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        2.2,
+        0xff4444
+    );
+    sunScene.add(arrowX);
+
+    // Ось Y (зелёная)
+    const arrowY = createArrow(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, 0, 0),
+        2.2,
+        0x44ff44
+    );
+    sunScene.add(arrowY);
+
+    // Ось Z (синяя)
+    const arrowZ = createArrow(
+        new THREE.Vector3(0, 0, 1),
+        new THREE.Vector3(0, 0, 0),
+        2.2,
+        0x4444ff
+    );
+    sunScene.add(arrowZ);
+
+    // ===== ПОДПИСИ ОСЕЙ =====
+    function createLabel(text, color, position) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+
+        ctx.clearRect(0, 0, 64, 64);
+        ctx.font = 'Bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = color;
+        ctx.fillText(text, 32, 34);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const material = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false
+        });
+        const sprite = new THREE.Sprite(material);
+        sprite.position.copy(position);
+        sprite.scale.set(0.4, 0.4, 1);
+        return sprite;
+    }
+
+    // Подписи на концах стрелок
+    sunScene.add(createLabel('X', '#ff4444', new THREE.Vector3(2.6, 0, 0)));
+    sunScene.add(createLabel('Y', '#44ff44', new THREE.Vector3(0, 2.6, 0)));
+    sunScene.add(createLabel('Z', '#4444ff', new THREE.Vector3(0, 0, 2.6)));
+
+
+
+    // ===== ОБРАБОТЧИКИ МЫШИ =====
+    const canvas = sunRenderer.domElement;
+
+    // Отключаем контекстное меню
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Левая кнопка - вращение сферы
+    canvas.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+            isDraggingSphere = true;
+            previousMousePosition = {
+                x: e.clientX,
+                y: e.clientY
+            };
+            canvas.style.cursor = 'grabbing';
+        }
+    });
+
+    // Правая кнопка - перемещение точки по поверхности сферы
+    canvas.addEventListener('mousedown', (e) => {
+        if (e.button === 2) {
+            isDraggingDot = true;
+            previousMousePosition = {
+                x: e.clientX,
+                y: e.clientY
+            };
+            canvas.style.cursor = 'crosshair';
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        // Вращение сферы (левая кнопка)
+        if (isDraggingSphere) {
+            const deltaX = e.clientX - previousMousePosition.x;
+            const deltaY = e.clientY - previousMousePosition.y;
+
+            // Используем кватернионы для правильного вращения
+            const group = window.sphereGroup;
+            if (group) {
+                // Вращаем группу вокруг мировых осей
+                const quatX = new THREE.Quaternion().setFromAxisAngle(
+                    new THREE.Vector3(0, 1, 0), deltaX * 0.005
+                );
+                const quatY = new THREE.Quaternion().setFromAxisAngle(
+                    new THREE.Vector3(1, 0, 0), deltaY * 0.005
+                );
+                group.quaternion.multiplyQuaternions(quatX, group.quaternion);
+                group.quaternion.multiplyQuaternions(quatY, group.quaternion);
+                group.quaternion.normalize();
+
+                // Получаем позицию точки в мировых координатах
+                const dotLocalPos = new THREE.Vector3(0, 1.5, 0);
+                const worldPos = dotLocalPos.clone().applyQuaternion(group.quaternion);
+
+                // Обновляем координаты
+                updateSunCoordinates(worldPos.x, worldPos.y, worldPos.z);
+            }
+
+            previousMousePosition = {
+                x: e.clientX,
+                y: e.clientY
+            };
+        }
+
+        // Перемещение точки по поверхности сферы (правая кнопка)
+        if (isDraggingDot) {
+            // Получаем позицию курсора на экране
+            const rect = canvas.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Создаем луч из камеры через позицию курсора
+            const vector = new THREE.Vector3(x, y, 0.5);
+            vector.unproject(sunCamera);
+            const dir = vector.sub(sunCamera.position).normalize();
+
+            // Находим точку пересечения луча со сферой
+            const sphereCenter = new THREE.Vector3(0, 0, 0);
+            const sphereRadius = 1.5;
+
+            const oc = sunCamera.position.clone().sub(sphereCenter);
+            const a = dir.dot(dir);
+            const b = 2 * oc.dot(dir);
+            const c = oc.dot(oc) - sphereRadius * sphereRadius;
+            const discriminant = b * b - 4 * a * c;
+
+            if (discriminant >= 0) {
+                const t = (-b - Math.sqrt(discriminant)) / (2 * a);
+                if (t > 0) {
+                    const hitPoint = sunCamera.position.clone().add(dir.clone().multiplyScalar(t));
+                    const direction = hitPoint.clone().normalize();
+                    const newPos = direction.clone().multiplyScalar(sphereRadius);
+
+                    // Обновляем позицию точки в локальных координатах группы
+                    const group = window.sphereGroup;
+                    if (group) {
+                        // Преобразуем мировые координаты в локальные
+                        const localPos = group.worldToLocal(newPos.clone());
+                        sunDot.position.copy(localPos);
+
+                        // Обновляем луч в локальных координатах
+                        const rayPoints = [
+                            new THREE.Vector3(0, 0, 0),
+                            localPos.clone().multiplyScalar(1.7)
+                        ];
+                        sunRay.geometry.dispose();
+                        sunRay.geometry = new THREE.BufferGeometry().setFromPoints(rayPoints);
+
+                        // Обновляем координаты в мировых координатах
+                        updateSunCoordinates(newPos.x, newPos.y, newPos.z);
+                    }
+                }
+            }
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isDraggingSphere) {
+            isDraggingSphere = false;
+            canvas.style.cursor = 'grab';
+        }
+        if (isDraggingDot) {
+            isDraggingDot = false;
+            canvas.style.cursor = 'grab';
+        }
+    });
+
+    // ===== КОЛЕСО МЫШИ - приближение/отдаление =====
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 1 : -1;
+        cameraDistance += delta * 0.3;
+        cameraDistance = Math.max(2.5, Math.min(10, cameraDistance));
+        updateCameraPosition();
+    });
+
+    // Ресайз
+    window.addEventListener('resize', () => {
+        const newWidth = container.clientWidth || 600;
+        const newHeight = container.clientHeight || 300;
+        sunCamera.aspect = newWidth / newHeight;
+        sunCamera.updateProjectionMatrix();
+        sunRenderer.setSize(newWidth, newHeight);
+    });
+
+    // Анимация
+    function animate() {
+        requestAnimationFrame(animate);
+        sunRenderer.render(sunScene, sunCamera);
+    }
+    animate();
+
+    canvas.style.cursor = 'grab';
+}
+    function updateCameraPosition() {
+        if (!sunCamera) return;
+        const x = cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
+        const y = cameraDistance * Math.sin(cameraAngleY);
+        const z = cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+        sunCamera.position.set(x, y, z);
+        sunCamera.lookAt(0, 0, 0);
+    }
+
+    function updateSunCoordinates(x, y, z) {
+        document.getElementById('sunX').value = x.toFixed(2);
+        document.getElementById('sunY').value = y.toFixed(2);
+        document.getElementById('sunZ').value = z.toFixed(2);
+
+        window.sunPosition = { x, y, z };
+    }
+
+    function resetSunPosition() {
+        const group = window.sphereGroup;
+        if (group) {
+            // Сбрасываем вращение группы
+            group.quaternion.identity();
+            group.quaternion.normalize();
+
+            // Сбрасываем позицию точки в локальных координатах
+            sunDot.position.set(0, 1.5, 0);
+
+            // Сбрасываем луч
+            const rayPoints = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 2.55, 0)
+            ];
+            sunRay.geometry.dispose();
+            sunRay.geometry = new THREE.BufferGeometry().setFromPoints(rayPoints);
+
+            updateSunCoordinates(0, 1.5, 0);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initSunSphere, 100);
+    });
+</script>
 </body>
 </html>
