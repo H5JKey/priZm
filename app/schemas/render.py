@@ -1,6 +1,6 @@
 from typing import ClassVar
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, conlist
 
 from schemas.constraints.render import (
     HeightConstraint,
@@ -8,6 +8,16 @@ from schemas.constraints.render import (
     WidthConstraint,
 )
 from schemas.file import FileResponse
+
+
+class SunInfo(BaseModel):
+    """
+    Схема для описания данных о солнце для рендера.
+    """
+
+    direction: conlist(float, min_length=3, max_length=3)
+    color: conlist(float, min_length=3, max_length=3)
+    exponent: int
 
 
 class RenderBase(BaseModel):
@@ -26,10 +36,19 @@ class RenderBase(BaseModel):
 
 class RenderCreate(RenderBase):
     """
-    Схема для создания рендера.
+    Схема для создания записи о рендере в базу данных.
     """
 
     model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
+
+
+class RenderCreatePayload(RenderCreate):
+    """
+    Схем для создания рендера.
+    """
+
+    background: conlist(float, min_length=3, max_length=3)
+    sun: SunInfo
 
 
 class RenderResponse(RenderBase):
