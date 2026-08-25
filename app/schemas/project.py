@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 from schemas.constraints.pagination import PageConstraint, SizeConstraint
 from schemas.constraints.project import DescriptionConstraint, NameConstraint
 from schemas.render import (
-    RenderCreate,
+    RenderCreatePayload,
     RenderResponse,
     RenderWithFileFullResponse,
     RenderWithFileResponse,
@@ -41,7 +41,7 @@ class ProjectWithRenderCreate(BaseModel):
     Схема для создания проекта c предоставлением данных о рендере.
     """
 
-    render: RenderCreate
+    render: RenderCreatePayload
     project: ProjectCreate
 
 

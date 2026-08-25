@@ -17,8 +17,12 @@ from infrastructure.database.repositories import (
     RenderRepository,
     UserRepository,
 )
-from schemas.event import AddRenderProjectEvent, EventCreate
-from schemas.file import FileCreate
+from schemas.event import (
+    AddRenderProjectEvent,
+    EventCreate,
+    GenerateRenderEvent,
+)
+from schemas.file import FileCreate, FileLocation, FileLocationCreate
 from schemas.project import (
     ProjectPartialUpdate,
     ProjectResponse,
@@ -28,6 +32,7 @@ from schemas.project import (
     ProjectWithRenderFileResponse,
     ProjectWithRenderResponse,
 )
+from schemas.render import RenderCreate
 
 logger = get_logger(__name__)
 
@@ -147,7 +152,7 @@ class ProjectService:
         s3_client: AbstractS3Client,
     ) -> None:
         project_id = add_render_project_event.project_id
-        file_location = add_render_project_event.file
+        file_location = add_render_project_event.output
         bucket = file_location.bucket
         key = file_location.key
 
@@ -203,26 +208,40 @@ class ProjectService:
         create_project: ProjectWithRenderCreate,
     ) -> ProjectWithRenderResponse:
         create_project_data = create_project.project
-        create_render_data = create_project.render
+        create_full_render_data = create_project.render
         file_id = create_project_data.source_file_id
         file = await self.file_repository.get_by_id(file_id)
         if file is None:
             raise FileIdNotFoundError(file_id)
+
+        create_render_data = RenderCreate.model_validate(
+            create_full_render_data.model_dump(),
+        )
         render = await self.render_repository.create_render(create_render_data)
         project = await self.project_repository.create_project(
             user_id=user_id,
             render_id=render.id,
             create_project_data=create_project_data,
         )
-
-        event_create_data = EventCreate.get_from_database(
-            project=project,
-            render=render,
-            file=file,
-            topic=settings.kafka.topic.create_project,
+        input_file_location = FileLocationCreate(
+            bucket=settings.minio.bucket.input,
+            key=file.key,
         )
-
+        output_file_location = FileLocation(
+            bucket=settings.minio.bucket.output,
+        )
+        event = GenerateRenderEvent(
+            project_id=project.id,
+            input=input_file_location,
+            output=output_file_location,
+            render=create_full_render_data,
+        )
+        event_create_data = EventCreate(
+            topic=settings.kafka.topic.create_project,
+            message=event.model_dump(),
+        )
         await self.outbox_repository.create_event(event_create_data)
+
         logger.info(
             "Created project, project_id=%s, user_id=%s, render_id=%s, source_file_id=%s, name=%s, status=%s, visibility=%s",  # noqa: E501
             project.id,
