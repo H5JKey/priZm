@@ -1159,6 +1159,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const denoiser = document.getElementById('denoiser').value === 'true';
                 const gpu = document.getElementById('gpu').value === 'true';
 
+                // ===== НОВОЕ: ПОЛУЧАЕМ КООРДИНАТЫ СОЛНЦА =====
+                const sunX = parseFloat(document.getElementById('sunX').value) || 0;
+                const sunY = parseFloat(document.getElementById('sunY').value) || 1;
+                const sunZ = parseFloat(document.getElementById('sunZ').value) || 0;
+                // =============================================
+
                 // 2. Валидация
                 if (!name) {
                     errorDiv.style.display = 'block';
@@ -1197,7 +1203,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         description: description || '',
                         source_file_id: fileData.id,
                         visibility: visibility
+                    },
+                    // ===== НОВОЕ: КООРДИНАТЫ СОЛНЦА =====
+                    sun_position: {
+                        x: sunX,
+                        y: sunY,
+                        z: sunZ
                     }
+                    // ====================================
                 };
 
                 console.log('📦 Создание проекта:', projectData);

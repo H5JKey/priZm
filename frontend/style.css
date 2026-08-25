@@ -1432,3 +1432,18 @@ a {
     border-top: 1px solid #e8ecf1;
     background: #f8f9fa;
 }
+
+/* ===== 3D ШАР ДЛЯ СОЛНЦА ===== */
+#sunSphereContainer {
+    width: 100%;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1a1a2e;
+    cursor: grab;
+    position: relative;
+}
+
+#sunSphereContainer:active {
+    cursor: grabbing;
+}
