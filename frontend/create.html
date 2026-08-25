@@ -154,6 +154,46 @@
                     </div>
                 </div>
 
+                <!-- Настройки цвета -->
+                <div class="form-section">
+                    <h3>🎨 Настройки цвета</h3>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="sunColor"><i class="fas fa-sun"></i> Цвет солнца</label>
+                            <input type="color" id="sunColor" value="#ffaa00" style="width: 100%; height: 44px; padding: 4px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer;">
+                        </div>
+                        <div class="form-group half">
+                            <label for="bgColor"><i class="fas fa-palette"></i> Цвет фона</label>
+                            <input type="color" id="bgColor" value="#4a6cf7" style="width: 100%; height: 44px; padding: 4px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sunSize"><i class="fas fa-circle"></i> Размер солнца</label>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <input type="range" id="sunSize" min="0.02" max="0.35" step="0.01" value="0.1" style="flex: 1;">
+                            <span id="sunSizeValue" style="min-width: 50px; font-weight: 600; color: #4a6cf7;">0.10</span>
+                        </div>
+                        <small class="helper-text">Размер точки на сфере</small>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div id="sunColorPreview" style="width: 30px; height: 30px; border-radius: 50%; background: #ffaa00; border: 2px solid #ddd;"></div>
+                            <span style="font-size: 13px; color: #666;">Цвет солнца</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div id="bgColorPreview" style="width: 30px; height: 30px; border-radius: 6px; background: #1a1a2e; border: 2px solid #ddd;"></div>
+                            <span style="font-size: 13px; color: #666;">Цвет фона</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div id="sunSizePreview" style="width: 20px; height: 20px; border-radius: 50%; background: #ffaa00; border: 2px solid #ddd;"></div>
+                            <span style="font-size: 13px; color: #666;">Размер: <span id="sunSizePreviewText">0.10</span></span>
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-large">
                     <i class="fas fa-upload"></i> Создать проект
                 </button>
@@ -165,6 +205,97 @@
     </main>
 
     <script src="script.js"></script>
+
+    <script>
+    // ===== НАСТРОЙКИ СОЛНЦА =====
+    document.addEventListener('DOMContentLoaded', function() {
+        const sunColorInput = document.getElementById('sunColor');
+        const bgColorInput = document.getElementById('bgColor');
+        const sunSizeInput = document.getElementById('sunSize');
+        const sunPreview = document.getElementById('sunColorPreview');
+        const bgPreview = document.getElementById('bgColorPreview');
+        const sunSizeValue = document.getElementById('sunSizeValue');
+        const sunSizePreview = document.getElementById('sunSizePreview');
+        const sunSizePreviewText = document.getElementById('sunSizePreviewText');
+
+        // Цвет солнца
+        if (sunColorInput && sunPreview) {
+            sunColorInput.addEventListener('input', function() {
+                sunPreview.style.background = this.value;
+                updateSunDotColor(this.value);
+                if (sunSizePreview) {
+                    sunSizePreview.style.background = this.value;
+                }
+            });
+        }
+
+        // Цвет фона
+        if (bgColorInput && bgPreview) {
+            bgColorInput.addEventListener('input', function() {
+                bgPreview.style.background = this.value;
+                updateSunBackground(this.value);
+            });
+        }
+
+        // Размер солнца
+        if (sunSizeInput && sunSizeValue) {
+            sunSizeInput.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                sunSizeValue.textContent = val.toFixed(2);
+                if (sunSizePreviewText) {
+                    sunSizePreviewText.textContent = val.toFixed(2);
+                }
+                updateSunDotSize(val);
+                // Обновляем превью размера
+                if (sunSizePreview) {
+                    const size = Math.max(10, val * 120);
+                    sunSizePreview.style.width = size + 'px';
+                    sunSizePreview.style.height = size + 'px';
+                }
+            });
+        }
+    });
+
+    // Функция для обновления цвета точки
+    function updateSunDotColor(color) {
+        if (sunDot) {
+            sunDot.material.color.set(color);
+        }
+        if (sunRay) {
+            sunRay.material.color.set(color);
+        }
+        // Обновляем превью цвета солнца в 3D сцене
+        window.sunColor = color;
+    }
+
+    // Функция для обновления цвета фона
+    function updateSunBackground(color) {
+        if (sunScene) {
+            sunScene.background = new THREE.Color(color);
+        }
+        window.bgColor = color;
+    }
+
+    // Функция для обновления размера точки
+    function updateSunDotSize(size) {
+        if (sunDot) {
+            sunDot.scale.set(size * 10, size * 10, size * 10);
+        }
+        window.sunSize = size;
+    }
+
+    // Инициализация размера при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const initialSize = parseFloat(document.getElementById('sunSize').value) || 0.1;
+            updateSunDotSize(initialSize);
+            const initialColor = document.getElementById('sunColor').value;
+            updateSunDotColor(initialColor);
+            const initialBg = document.getElementById('bgColor').value;
+            updateSunBackground(initialBg);
+        }, 200);
+    });
+</script>
 
     <script>
     // ===== 3D ШАР ДЛЯ ВЫБОРА ПОЛОЖЕНИЯ СОЛНЦА =====

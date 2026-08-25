@@ -1159,10 +1159,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const denoiser = document.getElementById('denoiser').value === 'true';
                 const gpu = document.getElementById('gpu').value === 'true';
 
-                // ===== НОВОЕ: ПОЛУЧАЕМ КООРДИНАТЫ СОЛНЦА =====
+                // ===== КООРДИНАТЫ СОЛНЦА =====
                 const sunX = parseFloat(document.getElementById('sunX').value) || 0;
                 const sunY = parseFloat(document.getElementById('sunY').value) || 1;
                 const sunZ = parseFloat(document.getElementById('sunZ').value) || 0;
+
+                // ===== НАСТРОЙКИ ЦВЕТА =====
+                const sunColor = document.getElementById('sunColor').value;
+                const bgColor = document.getElementById('bgColor').value;
+                const sunSize = parseFloat(document.getElementById('sunSize').value) || 0.1;
                 // =============================================
 
                 // 2. Валидация
@@ -1204,13 +1209,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         source_file_id: fileData.id,
                         visibility: visibility
                     },
-                    // ===== НОВОЕ: КООРДИНАТЫ СОЛНЦА =====
                     sun_position: {
                         x: sunX,
                         y: sunY,
                         z: sunZ
-                    }
-                    // ====================================
+                    },
+                    sun_color: sunColor,
+                    background_color: bgColor,
+                    sun_size: sunSize
                 };
 
                 console.log('📦 Создание проекта:', projectData);
