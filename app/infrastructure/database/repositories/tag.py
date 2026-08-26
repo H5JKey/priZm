@@ -2,6 +2,7 @@ from core.interfaces.repositories import AbstractTagRepository
 from schemas.tag import TagCreate
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from infrastructure.database.models import Tag
 
@@ -11,7 +12,9 @@ class TagRepository(AbstractTagRepository):
         self.session = session
 
     async def get_by_id(self, tag_id: int) -> Tag | None:
-        return await self.session.get(Tag, tag_id)
+        stmt = select(Tag).options(joinedload(Tag.project)).where(Tag.id == tag_id)
+        result = await self.session.execute(stmt)
+        return result.scalar()
 
     async def get_project_tags(self, project_id: int) -> list[Tag] | None:
         stmt = select(Tag).where(Tag.project_id == project_id)
