@@ -1447,3 +1447,525 @@ a {
 #sunSphereContainer:active {
     cursor: grabbing;
 }
+
+/* ===== ТЭГИ ===== */
+.tags-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.tags-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tags-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: #4a6cf7;
+    color: white;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.tag-chip .tag-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tag-chip .tag-delete {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.tag-chip .tag-delete:hover {
+    color: #fff;
+}
+
+.empty-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #999;
+    font-size: 14px;
+    padding: 4px 0;
+}
+
+.empty-tags i {
+    font-size: 16px;
+}
+
+.loading-tags {
+    color: #999;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-tags {
+    color: #e74c3c;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Форма добавления тега */
+.add-tag-form {
+    margin-bottom: 12px;
+}
+
+.add-tag-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tag-input {
+    flex: 1;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.tag-input:focus {
+    border-color: #4a6cf7;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.btn-success {
+    background: #2ecc71;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #27ae60;
+}
+
+/* Адаптив */
+@media (max-width: 600px) {
+    .tags-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .add-tag-input-group {
+        flex-wrap: wrap;
+    }
+
+    .tag-input {
+        min-width: 120px;
+    }
+}
+
+/* ===== ТЭГИ (НОВАЯ КОЛОНКА) ===== */
+
+/* Основная сетка — 3 колонки */
+.project-detail-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 280px;
+    gap: 32px;
+}
+
+/* На больших экранах — 3 колонки */
+@media (min-width: 1201px) {
+    .project-detail-body {
+        grid-template-columns: 1fr 1fr 280px;
+    }
+    .project-detail-tags {
+        grid-column: 3;
+    }
+}
+
+/* На средних экранах — 2 колонки, теги внизу */
+@media (max-width: 1200px) {
+    .project-detail-body {
+        grid-template-columns: 1fr 1fr;
+    }
+    .project-detail-tags {
+        grid-column: 1 / -1;
+    }
+}
+
+/* На мобильных — 1 колонка */
+@media (max-width: 768px) {
+    .project-detail-body {
+        grid-template-columns: 1fr;
+    }
+    .project-detail-tags {
+        grid-column: 1;
+    }
+}
+
+/* Блок тегов */
+.project-detail-tags {
+    min-width: 0;
+}
+
+.tags-section {
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    position: sticky;
+    top: 80px;
+}
+
+.tags-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tags-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: #4a6cf7;
+    color: white;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.tag-chip .tag-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tag-chip .tag-delete {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.tag-chip .tag-delete:hover {
+    color: #fff;
+}
+
+.empty-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #999;
+    font-size: 14px;
+    padding: 4px 0;
+}
+
+.loading-tags {
+    color: #999;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-tags {
+    color: #e74c3c;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-tag-form {
+    margin-bottom: 12px;
+}
+
+.add-tag-input-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.tag-input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 80px;
+}
+
+.tag-input:focus {
+    border-color: #4a6cf7;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.btn-success {
+    background: #2ecc71;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #27ae60;
+}
+
+/* ===== ТЭГИ ===== */
+.tags-section {
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    position: sticky;
+    top: 80px;
+}
+
+.tags-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tags-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: #4a6cf7;
+    color: white;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.tag-chip .tag-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tag-chip .tag-delete {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.tag-chip .tag-delete:hover {
+    color: #fff;
+}
+
+.empty-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #999;
+    font-size: 14px;
+    padding: 4px 0;
+}
+
+.loading-tags {
+    color: #999;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-tags {
+    color: #e74c3c;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-tag-form {
+    margin-bottom: 12px;
+}
+
+.add-tag-input-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.tag-input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 80px;
+}
+
+.tag-input:focus {
+    border-color: #4a6cf7;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.btn-success {
+    background: #2ecc71;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #27ae60;
+}
+
+/* ===== ДЕТАЛЬНАЯ СТРАНИЦА ПРОЕКТА ===== */
+
+/* Основная сетка — 2 колонки: левая (описание) + правая (теги) */
+.project-detail-body {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 32px;
+}
+
+/* Результат рендера внизу на всю ширину */
+.project-detail-render {
+    margin-top: 32px;
+}
+
+@media (max-width: 900px) {
+    .project-detail-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== КРУПНЫЙ РЕНДЕР ===== */
+.render-preview-large {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.render-preview-large h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 12px 0;
+}
+
+.render-image-large {
+    width: 100%;
+    max-height: 600px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f0f2f5;
+}
+
+.no-render-large {
+    text-align: center;
+    padding: 80px 20px;
+    color: #999;
+}
+
+.no-render-large i {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.no-render-large small {
+    display: block;
+    margin-top: 8px;
+    color: #bbb;
+    font-size: 13px;
+}
