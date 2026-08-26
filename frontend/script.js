@@ -195,6 +195,151 @@ async function updateCurrentUserProfile(surname, name, username, email) {
     });
 }
 
+// ===== ТЭГИ =====
+async function getProjectTags(projectId) {
+    return await apiRequest(`/tags/project/${projectId}`);
+}
+
+async function createTag(name, projectId) {
+    return await apiRequest('/tags/create', {
+        method: 'POST',
+        body: JSON.stringify({
+            name: name,
+            project_id: projectId
+        })
+    });
+}
+
+// ===== УДАЛЕНИЕ ТЭГА =====
+async function deleteTag(tagId) {
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE}/tags/${tagId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        let errorMessage = 'Ошибка удаления тега';
+        try {
+            const error = await response.json();
+            errorMessage = error.detail || errorMessage;
+        } catch (e) {
+            // Если ответ не JSON
+            const text = await response.text();
+            if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
+    }
+
+    // DELETE возвращает 204 No Content - ничего не возвращаем
+    return null;
+}
+
+// ===== ЗАГРУЗКА ТЭГОВ ПРОЕКТА =====
+async function loadProjectTags(projectId, isOwner) {
+    const container = document.getElementById('tagsList');
+    if (!container) return;
+
+    try {
+        const data = await getProjectTags(projectId);
+        console.log('🏷️ Тэги проекта:', data);
+
+        const tags = data.tag_list || [];
+
+        if (tags.length === 0) {
+            container.innerHTML = `
+                <div class="empty-tags">
+                    <i class="fas fa-tag"></i>
+                    <span>Нет тегов</span>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = tags.map(tag => `
+            <div class="tag-chip" data-tag-id="${tag.id}">
+                <span class="tag-name">${tag.name}</span>
+                ${isOwner ? `
+                    <button class="tag-delete" onclick="deleteTagHandler(${tag.id}, ${projectId})" title="Удалить тег">
+                        <i class="fas fa-times"></i>
+                    </button>
+                ` : ''}
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('❌ Ошибка загрузки тегов:', error);
+        container.innerHTML = `
+            <div class="error-tags">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Ошибка загрузки</span>
+            </div>
+        `;
+    }
+}
+
+// ===== УПРАВЛЕНИЕ ТЭГАМИ =====
+function showAddTagForm() {
+    const form = document.getElementById('addTagForm');
+    const input = document.getElementById('newTagInput');
+    if (form) {
+        form.style.display = 'block';
+        if (input) {
+            input.focus();
+        }
+    }
+}
+
+function hideAddTagForm() {
+    const form = document.getElementById('addTagForm');
+    if (form) {
+        form.style.display = 'none';
+    }
+    const input = document.getElementById('newTagInput');
+    if (input) {
+        input.value = '';
+    }
+}
+
+async function addTag(projectId) {
+    const input = document.getElementById('newTagInput');
+    if (!input) return;
+
+    const name = input.value.trim();
+    if (!name) {
+        alert('Введите название тега');
+        return;
+    }
+
+    if (name.length > 30) {
+        alert('Название тега не должно превышать 30 символов');
+        return;
+    }
+
+    try {
+        await createTag(name, projectId);
+        hideAddTagForm();
+        // Перезагружаем теги
+        const isOwner = true; // или передавать из контекста
+        loadProjectTags(projectId, true);
+    } catch (error) {
+        alert('Ошибка добавления тега: ' + error.message);
+    }
+}
+
+// ===== УДАЛЕНИЕ ТЭГА (ОБРАБОТЧИК) =====
+async function deleteTagHandler(tagId, projectId) {
+    try {
+        await deleteTag(tagId);
+        const isOwner = true;
+        loadProjectTags(projectId, isOwner);
+    } catch (error) {
+        alert('Ошибка удаления тега: ' + error.message);
+    }
+}
 
 
 // ===== МОИ ПРОЕКТЫ =====
@@ -394,8 +539,8 @@ function renderProjectCard(project) {
     // Статус проекта
     const statusMap = {
         'pending': '⏳ В очереди',
-        'processing': '🔄 Рендеринг...',
-        'completed': '✅ Готов',
+        'rendering': 'Рендеринг',
+        'completed': 'Готов',
         'failed': '❌ Ошибка'
     };
     const statusText = statusMap[project.status] || project.status || 'Неизвестно';
@@ -761,9 +906,9 @@ async function loadProjectDetail(projectId) {
         // Статус
         const statusMap = {
             'pending': '⏳ В очереди',
-            'processing': '🔄 Рендеринг...',
-            'rendering': '🔄 Рендеринг...',
-            'completed': '✅ Готов',
+            'processing': 'Рендеринг',
+            'rendering': 'Рендеринг',
+            'completed': 'Готов',
             'failed': '❌ Ошибка'
         };
         const statusText = statusMap[project.status] || project.status || 'Неизвестно';
@@ -845,14 +990,14 @@ async function loadProjectDetail(projectId) {
                 ` : ''}
 
                 <div class="project-detail-body">
-                    <!-- Левая колонка -->
+                    <!-- Левая колонка: описание, файлы, настройки -->
                     <div class="project-detail-left">
                         <!-- Описание -->
                         <div class="detail-section">
                             <h3>📝 Описание</h3>
                             <p>${project.description || 'Нет описания'}</p>
                         </div>
-
+                
                         <!-- Файлы -->
                         <div class="detail-section">
                             <h3>📁 Файлы</h3>
@@ -870,11 +1015,11 @@ async function loadProjectDetail(projectId) {
                                     `<a href="${renderUrl}" class="btn btn-sm btn-primary" target="_blank">
                                         <i class="fas fa-eye"></i> Смотреть
                                     </a>` : 
-                                    `<span class="file-missing">${project.status === 'rendering' ? '⏳ Рендерится...' : 'Не готов'}</span>`
+                                    `<span class="file-missing">${project.status === 'rendering' ? '⏳ Рендерится' : 'Не готов'}</span>`
                                 }
                             </div>
                         </div>
-
+                
                         <!-- Настройки рендера -->
                         ${project.render ? `
                         <div class="detail-section">
@@ -882,27 +1027,11 @@ async function loadProjectDetail(projectId) {
                             <ul class="render-settings-list">
                                 <li><span>Разрешение</span> <span>${project.render.width || '—'} × ${project.render.height || '—'}</span></li>
                                 <li><span>Сэмплы</span> <span>${project.render.samples || '—'}</span></li>
-                                <li><span>Денойзер</span> <span>${project.render.denoiser ? '✅ Включен' : '❌ Выключен'}</span></li>
-                                <li><span>GPU</span> <span>${project.render.gpu ? '✅ Включен' : '❌ Выключен'}</span></li>
+                                <li><span>Денойзер</span> <span>${project.render.denoiser ? 'Включен' : 'Выключен'}</span></li>
+                                <li><span>GPU</span> <span>${project.render.gpu ? 'Включен' : 'Выключен'}</span></li>
                             </ul>
                         </div>
                         ` : ''}
-                    </div>
-
-                    <!-- Правая колонка -->
-                    <div class="project-detail-right">
-                        <!-- Превью -->
-                        <div class="render-preview">
-                            <h3>🖼️ Результат</h3>
-                            ${isRendered && renderUrl ? 
-                                `<img src="${renderUrl}" alt="Render" class="render-image">` :
-                                `<div class="no-render">
-                                    <i class="fas fa-image"></i>
-                                    <p>${project.status === 'rendering' ? '⏳ Рендерится...' : 'Рендер не готов'}</p>
-                                    ${project.status === 'rendering' ? '<small>Обновите страницу через несколько минут</small>' : ''}
-                                </div>`
-                            }
-                        </div>
                         
                         <!-- Владелец -->
                         <div class="owner-card" onclick="window.location.href='profile.html?id=${ownerId}'">
@@ -916,10 +1045,60 @@ async function loadProjectDetail(projectId) {
                             </div>
                         </div>
                     </div>
+                
+                    <!-- Правая колонка: теги -->
+                    <div class="project-detail-right">
+                        <div class="tags-section">
+                            <div class="tags-header">
+                                <h3><i class="fas fa-tags"></i> Тэги</h3>
+                                ${isOwner ? `
+                                    <button class="btn btn-sm btn-primary" onclick="showAddTagForm()">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            
+                            ${isOwner ? `
+                            <div id="addTagForm" style="display:none;" class="add-tag-form">
+                                <div class="add-tag-input-group">
+                                    <input type="text" id="newTagInput" placeholder="Название" maxlength="30" class="tag-input">
+                                    <button class="btn btn-sm btn-success" onclick="addTag(${project.id})">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" onclick="hideAddTagForm()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            <div id="tagsList" class="tags-list">
+                                <div class="loading-tags">
+                                    <i class="fas fa-spinner fa-spin"></i> Загрузка...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                
+                <!-- Результат рендера (крупным планом внизу) -->
+                <div class="project-detail-render">
+                    <div class="render-preview-large">
+                        <h3>Результат рендера</h3>
+                        ${isRendered && renderUrl ? 
+                            `<img src="${renderUrl}" alt="Render" class="render-image-large">` :
+                            `<div class="no-render-large">
+                                <i class="fas fa-image"></i>
+                                <p>${project.status === 'rendering' ? '⏳ Рендерится' : 'Рендер не готов'}</p>
+                                ${project.status === 'rendering' ? '<small>Обновите страницу через несколько минут</small>' : ''}
+                            </div>`
+                        }
+                    </div>
+                </div>
+                
             </div>
         `;
-
+        loadProjectTags(projectId, isOwner);
         // ===== ОБРАБОТЧИК ОБНОВЛЕНИЯ ПРОЕКТА =====
         const updateProjectForm = document.getElementById('updateProjectForm');
         if (updateProjectForm) {
@@ -946,7 +1125,7 @@ async function loadProjectDetail(projectId) {
                     await updateProject(projectId, name, description, visibility);
 
                     successDiv.style.display = 'block';
-                    successDiv.textContent = '✅ Проект успешно обновлен!';
+                    successDiv.textContent = 'Проект успешно обновлен!';
 
                     setTimeout(() => {
                         loadProjectDetail(projectId);
@@ -1250,7 +1429,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 5. Успех
                 successDiv.style.display = 'block';
-                successDiv.textContent = '✅ Проект успешно создан! Перенаправление...';
+                successDiv.textContent = 'Проект успешно создан!';
 
                 // 6. Переход на страницу проекта
                 setTimeout(() => {
@@ -1496,7 +1675,7 @@ async function loadProfile(userId = null, page = 1) {
                     await updateCurrentUserProfile(surname, name, username, email);
 
                     successDiv.style.display = 'block';
-                    successDiv.textContent = '✅ Профиль успешно обновлен!';
+                    successDiv.textContent = 'Профиль успешно обновлен!';
 
                     setTimeout(() => {
                         loadProfile();
