@@ -14,7 +14,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from infrastructure.database.core import Base
 
 if TYPE_CHECKING:
-    from infrastructure.database.models import File, Render, User
+    from infrastructure.database.models import File, Render, Tag, User
 
 
 class Project(Base):
@@ -57,6 +57,11 @@ class Project(Base):
     render: Mapped["Render"] = relationship(
         "Render",
         foreign_keys=[render_id],
+        back_populates="project",
+    )
+    tags: Mapped[list["Tag"]] = relationship(
+        "Tag",
+        foreign_keys="Tag.project_id",
         back_populates="project",
     )
 
