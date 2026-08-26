@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
-from infrastructure.database.models import File, Outbox, Project, Render, User
+from infrastructure.database.models import File, Outbox, Project, Render, Tag, User
 from pydantic import EmailStr
 from schemas.event import EventCreate
 from schemas.file import FileCreate
 from schemas.project import ProjectCreate, ProjectPartialUpdate
 from schemas.render import RenderCreate
+from schemas.tag import TagCreate
 from schemas.user import UserCreate, UserUpdate
 
 
@@ -182,9 +183,42 @@ class AbstractProjectRepository(AbstractRepository):
         """
 
 
+class AbstractTagRepository(AbstractRepository):
+    """
+    Интерфейс для работы с тэгами проектов.
+    """
+
+    @abstractmethod
+    async def get_by_id(self, tag_id: int) -> Tag | None:
+        """
+        Метод для получения информации о тэге по id.
+        """
+
+    @abstractmethod
+    async def get_project_tags(self, project_id: int) -> list[Tag] | None:
+        """
+        Метод для получения тэгов проекта.
+        """
+
+    @abstractmethod
+    async def create_tag(
+        self,
+        create_tag_data: TagCreate,
+    ) -> Tag:
+        """
+        Метод для добавления тэга к проекту.
+        """
+
+    @abstractmethod
+    async def delete_by_id(self, tag_id: int) -> None:
+        """
+        Метод для удаления тэга по id.
+        """
+
+
 class AbstractOutboxRepository(AbstractRepository):
     """
-    Класс для работы с outbox таблицей.
+    Интерфейс для работы с outbox таблицей.
     """
 
     @abstractmethod
