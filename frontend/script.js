@@ -1168,7 +1168,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sunColor = document.getElementById('sunColor').value;
                 const bgColor = document.getElementById('bgColor').value;
                 const sunSize = parseFloat(document.getElementById('sunSize').value) || 0.1;
-                // =============================================
 
                 // 2. Валидация
                 if (!name) {
@@ -1201,22 +1200,48 @@ document.addEventListener('DOMContentLoaded', () => {
                         height: height,
                         samples: samples,
                         denoiser: denoiser,
-                        gpu: gpu
+                        gpu: gpu,
+                        background: [
+                            parseFloat((parseInt(bgColor.slice(1, 3), 16) / 255).toFixed(3)),
+                            parseFloat((parseInt(bgColor.slice(3, 5), 16) / 255).toFixed(3)),
+                            parseFloat((parseInt(bgColor.slice(5, 7), 16) / 255).toFixed(3))
+                        ],
+                        sun: {
+                            direction: (() => {
+                                // Нормализуем координаты точки (радиус сферы = 1.5)
+                                const nx = sunX / 1.5;
+                                const ny = sunY / 1.5;
+                                const nz = sunZ / 1.5;
+
+                                // Получаем полярные углы
+                                const theta = Math.acos(Math.max(-1, Math.min(1, ny)));
+                                const phi = Math.atan2(nz, nx);
+
+                                // Вычисляем x, y, z при r = 1
+                                const x = Math.sin(theta) * Math.cos(phi);
+                                const y = Math.cos(theta);
+                                const z = Math.sin(theta) * Math.sin(phi);
+
+                                return [
+                                    parseFloat(x.toFixed(6)),
+                                    parseFloat(y.toFixed(6)),
+                                    parseFloat(z.toFixed(6))
+                                ];
+                            })(),
+                            color: [
+                                parseFloat((parseInt(sunColor.slice(1, 3), 16) / 255).toFixed(3)),
+                                parseFloat((parseInt(sunColor.slice(3, 5), 16) / 255).toFixed(3)),
+                                parseFloat((parseInt(sunColor.slice(5, 7), 16) / 255).toFixed(3))
+                            ],
+                            exponent: Math.round(sunSize * 600)
+                        }
                     },
                     project: {
                         name: name,
                         description: description || '',
                         source_file_id: fileData.id,
                         visibility: visibility
-                    },
-                    sun_position: {
-                        x: sunX,
-                        y: sunY,
-                        z: sunZ
-                    },
-                    sun_color: sunColor,
-                    background_color: bgColor,
-                    sun_size: sunSize
+                    }
                 };
 
                 console.log('📦 Создание проекта:', projectData);
