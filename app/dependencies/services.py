@@ -10,6 +10,7 @@ from infrastructure.minio.client import MinioClient
 from services.auth import AuthService
 from services.file_uploader import FileUploader
 from services.project import ProjectService
+from services.tag import TagService
 from services.user import UserService
 
 from dependencies.minio import get_minio_client
@@ -70,3 +71,15 @@ async def get_project_service(
         unit_of_work,
     )
     yield project_service
+
+
+async def get_tag_service(
+    unit_of_work: Annotated[
+        UnitOfWork,
+        Depends(get_unit_of_work),
+    ],
+) -> AsyncGenerator[TagService]:
+    tag_service = TagService(
+        unit_of_work,
+    )
+    yield tag_service
