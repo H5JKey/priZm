@@ -1,5 +1,3 @@
-
-
 from dependencies.annotations import (
     AuthUserByAccessTokenDep,
     PaginationPageDep,
