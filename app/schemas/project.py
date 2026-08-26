@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class ProjectBase(BaseModel):
     """
-    Базовая схема для создания проекта.
+    Базовая схема для проекта.
     """
 
     name: NameConstraint
