@@ -15,8 +15,8 @@ class SunInfo(BaseModel):
     Схема для описания данных о солнце для рендера.
     """
 
-    direction: conlist(float, min_length=3, max_length=3)
-    color: conlist(float, min_length=3, max_length=3)
+    direction: conlist(float, min_length=3, max_length=3)  # type: ignore[valid-type]
+    color: conlist(float, min_length=3, max_length=3)  # type: ignore[valid-type]
     exponent: int
 
 
@@ -47,7 +47,7 @@ class RenderCreatePayload(RenderCreate):
     Схем для создания рендера.
     """
 
-    background: conlist(float, min_length=3, max_length=3)
+    background: conlist(float, min_length=3, max_length=3)  # type: ignore[valid-type]
     sun: SunInfo
 
 
