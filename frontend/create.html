@@ -63,7 +63,7 @@
 
                     <div class="form-group">
                         <label for="projectDescription"><i class="fas fa-align-left"></i> Описание</label>
-                        <textarea id="projectDescription" rows="3" placeholder="Опишите ваш проект"></textarea>
+                        <textarea id="projectDescription" rows="3" placeholder="Опишите ваш проект" style="resize: none;"></textarea>
                     </div>
 
                     <div class="form-group">
@@ -482,131 +482,118 @@
 
 
     // ===== ОБРАБОТЧИКИ МЫШИ =====
-    const canvas = sunRenderer.domElement;
+const canvas = sunRenderer.domElement;
 
-    // Отключаем контекстное меню
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+// Отключаем контекстное меню
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // Левая кнопка - вращение сферы
-    canvas.addEventListener('mousedown', (e) => {
-        if (e.button === 0) {
-            isDraggingSphere = true;
-            previousMousePosition = {
-                x: e.clientX,
-                y: e.clientY
-            };
-            canvas.style.cursor = 'grabbing';
-        }
-    });
+// Левая кнопка - вращение сферы (координаты НЕ меняются)
+canvas.addEventListener('mousedown', (e) => {
+    if (e.button === 0) {
+        isDraggingSphere = true;
+        previousMousePosition = {
+            x: e.clientX,
+            y: e.clientY
+        };
+        canvas.style.cursor = 'grabbing';
+    }
+});
 
-    // Правая кнопка - перемещение точки по поверхности сферы
-    canvas.addEventListener('mousedown', (e) => {
-        if (e.button === 2) {
-            isDraggingDot = true;
-            previousMousePosition = {
-                x: e.clientX,
-                y: e.clientY
-            };
-            canvas.style.cursor = 'crosshair';
-        }
-    });
+// Правая кнопка - перемещение точки (координаты меняются)
+canvas.addEventListener('mousedown', (e) => {
+    if (e.button === 2) {
+        isDraggingDot = true;
+        previousMousePosition = {
+            x: e.clientX,
+            y: e.clientY
+        };
+        canvas.style.cursor = 'crosshair';
+    }
+});
 
-    window.addEventListener('mousemove', (e) => {
-        // Вращение сферы (левая кнопка)
-        if (isDraggingSphere) {
-            const deltaX = e.clientX - previousMousePosition.x;
-            const deltaY = e.clientY - previousMousePosition.y;
+window.addEventListener('mousemove', (e) => {
+    // Вращение сферы (левая кнопка) - координаты НЕ меняются
+    if (isDraggingSphere) {
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
 
-            // Используем кватернионы для правильного вращения
-            const group = window.sphereGroup;
-            if (group) {
-                // Вращаем группу вокруг мировых осей
-                const quatX = new THREE.Quaternion().setFromAxisAngle(
-                    new THREE.Vector3(0, 1, 0), deltaX * 0.005
-                );
-                const quatY = new THREE.Quaternion().setFromAxisAngle(
-                    new THREE.Vector3(1, 0, 0), deltaY * 0.005
-                );
-                group.quaternion.multiplyQuaternions(quatX, group.quaternion);
-                group.quaternion.multiplyQuaternions(quatY, group.quaternion);
-                group.quaternion.normalize();
+        const group = window.sphereGroup;
+        if (group) {
+            const quatX = new THREE.Quaternion().setFromAxisAngle(
+                new THREE.Vector3(0, 1, 0), deltaX * 0.005
+            );
+            const quatY = new THREE.Quaternion().setFromAxisAngle(
+                new THREE.Vector3(1, 0, 0), deltaY * 0.005
+            );
+            group.quaternion.multiplyQuaternions(quatX, group.quaternion);
+            group.quaternion.multiplyQuaternions(quatY, group.quaternion);
+            group.quaternion.normalize();
 
-                // Получаем позицию точки в мировых координатах
-                const dotLocalPos = new THREE.Vector3(0, 1.5, 0);
-                const worldPos = dotLocalPos.clone().applyQuaternion(group.quaternion);
-
-                // Обновляем координаты
-                updateSunCoordinates(worldPos.x, worldPos.y, worldPos.z);
-            }
-
-            previousMousePosition = {
-                x: e.clientX,
-                y: e.clientY
-            };
+            // НЕ обновляем координаты!
         }
 
-        // Перемещение точки по поверхности сферы (правая кнопка)
-        if (isDraggingDot) {
-            // Получаем позицию курсора на экране
-            const rect = canvas.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        previousMousePosition = {
+            x: e.clientX,
+            y: e.clientY
+        };
+    }
 
-            // Создаем луч из камеры через позицию курсора
-            const vector = new THREE.Vector3(x, y, 0.5);
-            vector.unproject(sunCamera);
-            const dir = vector.sub(sunCamera.position).normalize();
+    // Перемещение точки (правая кнопка) - координаты меняются
+    if (isDraggingDot) {
+        const rect = canvas.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-            // Находим точку пересечения луча со сферой
-            const sphereCenter = new THREE.Vector3(0, 0, 0);
-            const sphereRadius = 1.5;
+        const vector = new THREE.Vector3(x, y, 0.5);
+        vector.unproject(sunCamera);
+        const dir = vector.sub(sunCamera.position).normalize();
 
-            const oc = sunCamera.position.clone().sub(sphereCenter);
-            const a = dir.dot(dir);
-            const b = 2 * oc.dot(dir);
-            const c = oc.dot(oc) - sphereRadius * sphereRadius;
-            const discriminant = b * b - 4 * a * c;
+        const sphereCenter = new THREE.Vector3(0, 0, 0);
+        const sphereRadius = 1.5;
 
-            if (discriminant >= 0) {
-                const t = (-b - Math.sqrt(discriminant)) / (2 * a);
-                if (t > 0) {
-                    const hitPoint = sunCamera.position.clone().add(dir.clone().multiplyScalar(t));
-                    const direction = hitPoint.clone().normalize();
-                    const newPos = direction.clone().multiplyScalar(sphereRadius);
+        const oc = sunCamera.position.clone().sub(sphereCenter);
+        const a = dir.dot(dir);
+        const b = 2 * oc.dot(dir);
+        const c = oc.dot(oc) - sphereRadius * sphereRadius;
+        const discriminant = b * b - 4 * a * c;
 
-                    // Обновляем позицию точки в локальных координатах группы
-                    const group = window.sphereGroup;
-                    if (group) {
-                        // Преобразуем мировые координаты в локальные
-                        const localPos = group.worldToLocal(newPos.clone());
-                        sunDot.position.copy(localPos);
+        if (discriminant >= 0) {
+            const t = (-b - Math.sqrt(discriminant)) / (2 * a);
+            if (t > 0) {
+                const hitPoint = sunCamera.position.clone().add(dir.clone().multiplyScalar(t));
+                const direction = hitPoint.clone().normalize();
+                const newPos = direction.clone().multiplyScalar(sphereRadius);
 
-                        // Обновляем луч в локальных координатах
-                        const rayPoints = [
-                            new THREE.Vector3(0, 0, 0),
-                            localPos.clone().multiplyScalar(1.7)
-                        ];
-                        sunRay.geometry.dispose();
-                        sunRay.geometry = new THREE.BufferGeometry().setFromPoints(rayPoints);
+                const group = window.sphereGroup;
+                if (group) {
+                    const localPos = group.worldToLocal(newPos.clone());
+                    sunDot.position.copy(localPos);
 
-                        // Обновляем координаты в мировых координатах
-                        updateSunCoordinates(newPos.x, newPos.y, newPos.z);
-                    }
+                    const rayPoints = [
+                        new THREE.Vector3(0, 0, 0),
+                        localPos.clone().multiplyScalar(1.7)
+                    ];
+                    sunRay.geometry.dispose();
+                    sunRay.geometry = new THREE.BufferGeometry().setFromPoints(rayPoints);
+
+                    // Обновляем координаты ТОЛЬКО здесь!
+                    updateSunCoordinates(newPos.x, newPos.y, newPos.z);
                 }
             }
         }
-    });
+    }
+});
 
-    window.addEventListener('mouseup', () => {
-        if (isDraggingSphere) {
-            isDraggingSphere = false;
-            canvas.style.cursor = 'grab';
-        }
-        if (isDraggingDot) {
-            isDraggingDot = false;
-            canvas.style.cursor = 'grab';
-        }
-    });
+window.addEventListener('mouseup', () => {
+    if (isDraggingSphere) {
+        isDraggingSphere = false;
+        canvas.style.cursor = 'grab';
+    }
+    if (isDraggingDot) {
+        isDraggingDot = false;
+        canvas.style.cursor = 'grab';
+    }
+});
 
     // ===== КОЛЕСО МЫШИ - приближение/отдаление =====
     canvas.addEventListener('wheel', (e) => {
