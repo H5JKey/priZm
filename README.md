@@ -1,4 +1,4 @@
-# PriZm
+# Prism
 
 [![C++](https://img.shields.io/badge/C++-23-blue?logo=cplusplus&style=flat-square)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.20+-064F8C?logo=cmake)](https://cmake.org/)
@@ -8,14 +8,14 @@
 
 > Distributed physically based rendering platform
 
-PriZm is an open-source rendering platform that combines a physically based path tracing engine written in C++ with a scalable backend for distributed rendering written in Python.
+Prism is an open-source rendering platform that combines a physically based path tracing engine written in C++ with a scalable backend for distributed rendering written in Python.
 
 ---
 
 ## Repository Structure
 
 ```text
-priZm/
+prism/
 ├── app/                     # Python-based server infrastructure
 │   ├── api/                 # REST API endpoints
 │   ├── core/                # Core application logic
