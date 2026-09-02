@@ -220,6 +220,6 @@ __marimo__/
 .streamlit/secrets.toml
 
 renderer/build/
-app/certs
+backend/certs
 renderer/assets/
 renderer/.env

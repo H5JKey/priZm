@@ -46,4 +46,4 @@ See the [Renderer documentation](renderer/README.md).
 ### App (Backend)
 > Manages rendering jobs, storage, client communications  and other server-side functionality.
 
-See the [Backend documentation](app/README.md).
+See the [Backend documentation](backend/README.md).
