@@ -8,7 +8,7 @@ services:
       - ./frontend:/usr/share/nginx/html:ro
       - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      app:
+      backend:
         condition: service_healthy
       renderer:
         condition: service_started
@@ -29,12 +29,12 @@ services:
         condition: service_healthy
     restart: on-failure
 
-  app:
+  backend:
     build:
       context: .
-      dockerfile: app/Dockerfile
-    container_name: app
-    hostname: app
+      dockerfile: backend/Dockerfile
+    container_name: backend
+    hostname: backend
     environment:
       DATABASE__HOST: database
       DATABASE__PORT: 5432
@@ -46,7 +46,7 @@ services:
       MINIO__USERNAME: adminadmin
       MINIO__PASSWORD: adminadmin
     volumes:
-      - "./app:/app"
+      - "./backend:/backend"
     ports:
       - "8000:8000"
     depends_on:
@@ -66,18 +66,18 @@ services:
   outbox-worker:
     build:
       context: .
-      dockerfile: app/Dockerfile
+      dockerfile: backend/Dockerfile
     command: ["python", "./outbox_worker/main.py"]
     container_name: outbox-worker
     hostname: outbox-worker
     environment:
-      PYTHONPATH: /app
+      PYTHONPATH: /backend
 
       DATABASE__HOST: database
       DATABASE__PORT: 5432
       DATABASE__DB_NAME: renderer
     volumes:
-      - "./app:/app"
+      - "./backend:/backend"
     depends_on:
       database:
         condition: service_healthy
