@@ -14,7 +14,6 @@ class NotFoundError(BaseApplicationError):
     """
 
     def __init__(self, detail: str) -> None:
-        # self.detail = detail
         super().__init__(detail)
 
 
@@ -24,7 +23,6 @@ class ConflictError(BaseApplicationError):
     """
 
     def __init__(self, detail: str) -> None:
-        # self.detail = detail
         super().__init__(detail)
 
 
@@ -34,7 +32,6 @@ class AuthenticationError(BaseApplicationError):
     """
 
     def __init__(self, detail: str) -> None:
-        # self.detail = detail
         super().__init__(detail)
 
 
@@ -44,5 +41,9 @@ class ForbiddenError(BaseApplicationError):
     """
 
     def __init__(self, detail: str) -> None:
-        # self.detail = detail
+        super().__init__(detail)
+
+
+class KafkaSendError(BaseApplicationError):
+    def __init__(self, detail: str) -> None:
         super().__init__(detail)
