@@ -10,4 +10,8 @@ class KafkaConfig(BaseModel):
     host: str = "kafka"
     port: int = 9092
 
+    @property
+    def bootstrap_servers(self) -> str:
+        return f"{self.host}:{self.port}"
+
     topic: KafkaTopicConfig = KafkaTopicConfig()

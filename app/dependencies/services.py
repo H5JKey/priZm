@@ -1,11 +1,9 @@
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
-from aiokafka import AIOKafkaProducer
 from core.config.application import settings
 from fastapi import Depends
 from infrastructure.database.unit_of_work import UnitOfWork
-from infrastructure.kafka import producer
 from infrastructure.minio.client import MinioClient
 from services.auth import AuthService
 from services.file_uploader import FileUploader
@@ -17,10 +15,6 @@ from dependencies.minio import get_minio_client
 from dependencies.repositories import (
     get_unit_of_work,
 )
-
-
-async def get_aiokafka_producer() -> AIOKafkaProducer:
-    return producer
 
 
 async def get_input_file_uploader(

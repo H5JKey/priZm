@@ -1,9 +1,6 @@
-from json import dumps, loads
-
-from aiokafka import AIOKafkaConsumer, AIOKafkaProducer, ConsumerRecord
+from aiokafka import AIOKafkaProducer, ConsumerRecord
 from core.config.application import settings
 from core.logging import get_logger
-from pydantic import BaseModel
 from schemas.event import AddRenderProjectEvent
 from services.project import ProjectService
 
@@ -14,18 +11,16 @@ from infrastructure.minio.session import get_minio_session
 
 logger = get_logger(__name__)
 
-
-def serialize_message[T: BaseModel](message_data: T) -> bytes:
-    message_dict = message_data.model_dump()
-    serialized_value = dumps(message_dict)
-    encoded_serialized_value = serialized_value.encode()
-    return encoded_serialized_value
+_producer = None
 
 
-def deserialize_message(message: bytes) -> dict[str, str | int | bool]:
-    message_string = message.decode()
-    json_message = loads(message_string)
-    return json_message  # type: ignore[no-any-return]
+async def get_producer() -> AIOKafkaProducer:
+    global _producer
+    if _producer is None:
+        _producer = AIOKafkaProducer(
+            bootstrap_servers=settings.kafka.bootstrap_servers,
+        )
+    return _producer
 
 
 async def process_message(message: ConsumerRecord) -> None:
@@ -51,24 +46,3 @@ async def process_message(message: ConsumerRecord) -> None:
             add_render_project_event,
             s3_client,
         )
-
-
-async def add_render_to_project_consume(consumer: AIOKafkaConsumer) -> None:
-    await consumer.start()
-    async for message in consumer:
-        await process_message(message)
-        await consumer.commit()
-
-
-consumer = AIOKafkaConsumer(
-    settings.kafka.topic.generate_render,
-    bootstrap_servers="kafka:9092",
-    group_id="app",
-    value_deserializer=deserialize_message,
-)
-
-
-producer = AIOKafkaProducer(
-    bootstrap_servers="kafka:9092",
-    value_serializer=serialize_message,
-)

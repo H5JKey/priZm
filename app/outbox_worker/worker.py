@@ -7,6 +7,7 @@ from core.config.application import settings
 from core.interfaces.clients import AbstractUnitOfWorkClient
 from core.logging import get_logger
 from infrastructure.database.repositories.outbox import OutboxRepository
+from infrastructure.kafka.utils import send_message
 from sqlalchemy.dialects.postgresql import JSONB
 
 logger = get_logger(__name__)
@@ -44,14 +45,10 @@ class OutboxWorker:
         message = self._serialize_message(event.message)
         await self.outbox_repository.mark_event_as_sent(event.id)
         topic = settings.kafka.topic.create_project
-        await self.producer.send(
+        await send_message(
+            producer=self.producer,
             topic=topic,
             value=message,
-        )
-        logger.info(
-            "Sent message, topic=%s, message=%s",
-            topic,
-            message,
         )
 
     @staticmethod
