@@ -12,7 +12,7 @@
     <td><img src="images/room.png" alt="Room" width="400"></td>
   </tr>
   <tr>
-    <td><img src="images/barry.png" alt="Barry" width="400"></td>
+    <td><img src="images/sponza.png" alt="Sponza" width="400"></td>
     <td><img src="images/flight-helmet.png" alt="Flight helmet" width="400"></td>
   </tr>
 </table>
