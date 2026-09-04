@@ -16,7 +16,7 @@ Prism is an open-source rendering platform that combines a physically based path
 
 ```text
 prism/
-├── app/                     # Python-based server infrastructure
+├── backend/                     # Python-based server infrastructure
 │   ├── api/                 # REST API endpoints
 │   ├── core/                # Core application logic
 │   ├── dependencies/        
@@ -43,7 +43,7 @@ prism/
 
 See the [Renderer documentation](renderer/README.md).
 
-### App (Backend)
+### Backend
 > Manages rendering jobs, storage, client communications  and other server-side functionality.
 
 See the [Backend documentation](backend/README.md).
